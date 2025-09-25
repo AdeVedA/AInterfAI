@@ -1,0 +1,88 @@
+{
+  "configs": {
+    "default": {
+      "Extensions": {
+        "allowed": ".py .js .jsx .tsx .ts .html .css .qss .cpp .c .java .go .rs .swift .php .sql .sh .ps1 .rb .pl .scala .dart .kt .swift .xml .yaml .yml .md .txt .rtf .docx .pptx .epub .pdf"
+      },
+      "Exclude": {
+        "dirs": ".git env venv .env .venv .hg .svn .idea .vscode node_modules dist build target out logs temp tmp __pycache__ .pytest_cache *coverage* *flake8* *storage*",
+        "files": "LICENSE README.md CONTRIBUTING.md INSTALL.md CHANGELOG.md Dockerfile Makefile requirements.txt setup.py pom.xml composer.json package-lock.json package.json Gemfile gemspec *__init__* *bootstrap* *.jpg *.png *.mp4 *.mov"
+      },
+      "Options": {
+        "use_gitignore": "yes"
+      },
+      "General": {
+        "history_max": "10"
+      },
+      "Paths": {
+        "history": ""
+      },
+      "Token": {
+        "model": "gpt-4"
+      }
+    },
+    "code": {
+      "Extensions": {
+        "allowed": ".py .js .jsx .tsx .ts .html .css .qss .cpp .c .java .go .rs .swift .php .sql .sh .ps1 .rb .pl .scala .dart .kt .swift .xml .yaml .yml .json .md .txt .rtf .docx .pptx .pdf"
+      },
+      "Exclude": {
+        "dirs": ".git env venv .env .venv .hg .svn .idea .vscode node_modules dist build target out logs temp tmp __pycache__ .pytest_cache *coverage* *flake8* *storage* *Archives*",
+        "files": "LICENSE CONTRIBUTING.md INSTALL.md CHANGELOG.md *__init__* *bootstrap* *.jpg *.png *.mp4 *.mov"
+      },
+      "Options": {
+        "use_gitignore": "yes"
+      },
+      "General": {
+        "history_max": "10"
+      },
+      "Paths": {
+        "history": ""
+      },
+      "Token": {
+        "model": "gpt-4"
+      }
+    },
+    "text": {
+      "Extensions": {
+        "allowed": ".pdf .txt .docx .pptx .ppt .xlsx .md .rst .doc .py .js .jsx .tsx .ts .html .css .qss .cpp .c .java .go .rs .swift .php .sql .sh .ps1 .rb .pl .scala .dart .kt .swift .xml .yaml .yml"
+      },
+      "Exclude": {
+        "dirs": ".git env venv .env .venv .hg .svn .idea .vscode node_modules dist build target out logs temp tmp __pycache__ .pytest_cache *coverage* *flake8* *storage*",
+        "files": "LICENSE README.md CONTRIBUTING.md INSTALL.md CHANGELOG.md Dockerfile Makefile requirements.txt setup.py pom.xml composer.json package-lock.json package.json Gemfile gemspec *__init__* *bootstrap* *.jpg *.png *.mp4 *.mov"
+      },
+      "Options": {
+        "use_gitignore": "no"
+      },
+      "General": {
+        "history_max": "10"
+      },
+      "Paths": {
+        "history": ""
+      },
+      "Token": {
+        "model": "gpt-4"
+      }
+    },
+    "all-in": {
+      "Extensions": {
+        "allowed": ".*"
+      },
+      "Exclude": {
+        "dirs": "",
+        "files": ""
+      },
+      "Options": {
+        "use_gitignore": "no"
+      },
+      "General": {
+        "history_max": "10"
+      },
+      "Paths": {
+        "history": ""
+      },
+      "Token": {
+        "model": "gpt-4"
+      }
+    }
+  }
+}

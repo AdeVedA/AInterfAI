@@ -1,0 +1,19 @@
+{
+  "geometry": "01d9d0cb00030000000000a400000060000006c800000501000000a40000007f000006c80000050100000000000000000a00000000a40000007f000006c800000501",
+  "splitter_sizes": [
+    250,
+    695,
+    353,
+    260
+  ],
+  "theme": "Anthracite Carrot",
+  "last_llm": "",
+  "last_prompt": "",
+  "font_size": 14,
+  "last_context_cfg": "default",
+  "show_query_dialog": true,
+  "generate_title": true,
+  "keep_alive": 240.0,
+  "llm_status_timer": 4000,
+  "prompts_language": "en"
+}
