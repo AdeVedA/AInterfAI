@@ -1,3 +1,33 @@
+<style>
+h2 {
+  background: linear-gradient(to right, rgba(39, 76, 119, 0.5), rgba(239, 131, 84, 0.4)) !important;
+  color: rgb(220, 195, 170)  !important;
+  border: 3px solid rgb(220, 195, 170) !important; border-radius: 0px 20px 10px 20px;
+  font-weight: bolder;
+  padding: 10px;
+}
+h3 {
+  /* background: rgb(56, 52, 61)  !important; */
+  color: rgb(251, 203, 188)  !important;
+  border-bottom: 2px ridge rgba(239, 131, 84, 0.4) !important; border-radius: 0px 15px 0px 15px;
+  font-size: 130% ; font-weight: bold ;
+  margin-left : 20px;
+  padding: 5px;
+}
+a {
+  background: linear-gradient(to right, rgba(39, 76, 119, 0.5), rgb(56, 52, 61)) !important;
+  border: 2px solid rgba(39, 76, 119, 0.5) !important;
+  border-radius: 25px;
+  color: rgb(220, 195, 170)  !important;
+  padding: 2px;
+}
+a:hover {
+  background: linear-gradient(to left, rgba(39, 76, 119, 0.5), rgb(56, 52, 61)) !important;
+  color: rgb(251, 203, 188)  !important;
+  padding: 3px;
+}
+</style>
+
 <p align="center">
   <img src="assets/icon.png" width="120" alt="AInterfAI Logo">
 </p>
@@ -19,14 +49,19 @@ A local LLM GUI for advanced chat, context injection, and document-aware RAG <br
   </p>
 </font></h4>
 
-<p align="center"><font size="4">
-<strong><a href="#tech-stack">⚙️ Tech Stack</a> <br> <a href="#features">🚀 Features</a> <br>
-<a href="#installation">⚙️ Installation</a> <br> <a href="#keyboard-shortcuts">⌨️ Keyboard Shortcuts</a> <br>
-<a href="#file-structure">🗂️ File Structure</a> <br> <a href="#license">📜 License</a>
+<div align="center"><font size="4">
+<strong>
+
+[⚙️ Tech Stack](#tech-stack)
+[🚀 Features](#features)
+[⚙️ Installation](#installation)
+[⌨️ Keyboard Shortcuts](#keyboard-shortcuts)
+[🗂️ File Structure](#file-structure)
+[📜 License](#license)
 
 </strong></font>
 
-</p>
+</div>
 
 ---
 
@@ -44,7 +79,7 @@ While this pattern is useful in this purpose, it also introduces some difficulty
 
 ---
 
-## ⚙️ Tech Stack
+<h2 id="tech-stack">⚙️ Tech Stack</h2>
 
 - **Ollama** (Local LLM server with REST API)
 - **PyQt6** (GUI framework)
@@ -58,7 +93,7 @@ While this pattern is useful in this purpose, it also introduces some difficulty
 - **pygments** (syntax highlighting)
 - **Configs JSON** (gui general parameters, prompts/prompts configs, context parser filtering)
 
-## 🚀 Features
+<h2 id="features">🚀 Features</h2>
 
 ### 🧩 General (Chat, Toolbar...)
 
@@ -165,46 +200,79 @@ A modular system for enriching prompts with your documents (document-based knowl
 
 ---
 
-## ⚙️ Installation
+<h2 id="installation">⚙️ Installation</h2>
 
-### 1. Install Python 3.13+ (older versions may work... but hasn't been tested!)
+### 0. Install [Python 3.13+](https://www.python.org/downloads/) (earlier versions may work… I just haven’t tested them!)
 
-→ https://www.python.org/downloads/
+→ [https://www.python.org/downloads/](https://www.python.org/downloads/)
+
+### 1. Retrieve the software
+
+#### A - Launch the Windows command interpreter
+
+Open Windows Explorer (WIN + E). Navigate to the location where you want to place the AInterfAI folder. Left‑click in the address bar of Explorer, type **`cmd`** (instead of the address), and press **Enter** (as you do at the end of each future command‑line instruction):
+
+```text
+cmd  # or `terminal` on macOS/Linux
+```
+
+#### B - Create a directory for the program
+
+Create a folder. You may name it **AInterfAI** in, for example, `d:\path\to\my\folder\AInterfAI`.
+
+```bash
+md AInterfAI # or `mkdir AInterfAI` on macOS/Linux
+cd AInterfAI
+```
+
+#### C - Clone the project's GitHub repository into this directory
+
+In the terminal (command prompt) that shows you are in the newly created directory, type the following commands in sequence:
+
+```bash
+git init
+```
+
+then:
+
+```bash
+git pull https://github.com/AdeVedA/AInterfAI -t main
+```
 
 ### 2. Create a Virtual Environment
 
 ```bash
-python -m venv env
-env\Scripts\activate       # or "source env/bin/activate" on Mac/Linux
+python -m venv env         # or `python3 -m venv env` on macOS/Linux
+env\Scripts\activate       # or `source env/bin/activate` on macOS/Linux
 ```
 
-### 3. Install Requirements
+### 3. Install the Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Install Ollama
+### 4. Install [Ollama](https://ollama.com/download)
 
 → [https://ollama.com/download](https://ollama.com/download)
 
-Once installed :
+Once installed:
 
-**A.** download your first model (see _Recommended Ollama Models_ section if you feel lost, here the example shows how to download `mistral-small3.2:24b`):
+**A.** Download your first model (see the “Recommended Ollama Models” section if you are confused; here we show how to download `mistral‑small3.2:24b`):
 
 ```bash
 ollama pull mistral-small3.2:24b
 ```
 
-You can use any local model compatible with Ollama (`mistral`, `qwen3`, `gemma3`, `gpt-oss`, etc.).
+You can use any local model compatible with Ollama (`mistral`, `qwen3`, `gemma3`, `gpt‑oss`, etc.).
 
-**B.** download the embedding_model "nomic-embed-text:latest" (no RAG will be possible without)
+**B.** Download the embedding model `"nomic-embed-text:latest"` (RAG will not be possible without it):
 
 ```bash
 ollama pull nomic-embed-text:latest
 ```
 
-### 5. Install Qdrant
+### 5. Install [Qdrant](https://qdrant.tech/download/)
 
 → [https://qdrant.tech/download/](https://qdrant.tech/download/)
 
@@ -222,6 +290,44 @@ python main.py
 
 On first run, the program will parse, through _local_ Ollama-API requests (`api/tags` & `api/show`), the models informations to record them in DB and give hints about each LLM recommanded hyperparameters and properties inside Ollama's Modelfile to give priority to these parameters over those associated to default roles/system prompt (which are LLM agnostic).
 If needed, you can change the delay (sync_time: timedelta = timedelta(days=30)) between each llm_properties parsing in core\llm_properties.py.)
+
+### 7. Friendly launching (if you want an automated launching)
+
+#### A. Windows
+
+Create a file named AInterfAI.bat in the same directory as `main.py` and `env/`.
+Edit the file with Notepad++ or WordPad and paste the following code (save it, then double‑click):
+
+```bash
+@echo off
+call .\env\Scripts\activate.bat
+py main.py
+cmd /k
+```
+
+You can create a desktop shortcut by right‑clicking the file, selecting **"Create shortcut"” (or _Send to -> Desktop_).
+After that, right‑click the shortcut, choose **"Properties -> Change icon…"\*\*, then browse to /assets/icon.ico (or use any icon you prefer).
+
+#### B. Mac/Linux
+
+Create a file named `run.sh` (or any name you like... `AInterfAI.sh` ?) in the same directory as `main.py` and `env/` and paste:
+
+```bash
+source ./env/bin/activate
+python3 main.py
+```
+
+Make this script executable
+
+```bash
+chmod +x run.sh
+```
+
+Run it from a Terminal
+
+```bash
+./run.sh
+```
 
 ## 🤖 Recommended Ollama Models
 
@@ -254,7 +360,7 @@ MOE (Mixture-Of-Experts) LLM are faster and more ressource friendly than Dense L
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+<h2 id="keyboard-shortcuts">⌨️ Keyboard Shortcuts</h2>
 
 | Shortcut             | Context                                                                                                               |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -269,7 +375,7 @@ MOE (Mixture-Of-Experts) LLM are faster and more ressource friendly than Dense L
 
 ---
 
-## 🗂️ File Structure
+<h2 id="file-structure">🗂️ File Structure</h2>
 
 ```
 project_root/
@@ -350,11 +456,11 @@ project_root/
 
 ---
 
-## 📜 License
+<h2 id="license">📜 License</h2>
 
 This project is licensed under the GPL v3. See the [LICENSE](https://github.com/python-qt-tools/PyQt6-stubs/blob/main/LICENSE) file for details.
 
-## Third-Party Licenses
+### Third-Party Licenses
 
 - [PyQt6](https://github.com/python-qt-tools/PyQt6-stubs/blob/main/LICENSE) - GPL v3
 - [LangChain](https://github.com/langchain-ai/langchain/blob/master/LICENSE) - MIT
