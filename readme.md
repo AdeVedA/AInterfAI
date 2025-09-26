@@ -330,15 +330,15 @@ MOE (Mixture-Of-Experts) LLM are faster and more ressource friendly than Dense L
 
 ---
 
-<h2 id="keyboard-shortcuts" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⌨️ Keyboard Shortcuts</h2>
+<h2 id="keyboard-shortcuts" style="background-color: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⌨️ Keyboard Shortcuts</h2>
 
 | Shortcut             | Context                                                                                                               |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `Ctrl + Mouse Wheel` | Zoom in/out font (in chat bubbles)                                                                                    |
 | `PageUp/PageDown`    | Paginated navigation (in chat bubbles and other text areas)                                                           |
 | `CTRL + F`           | Search with previous/next & highlighting (in an opened session's messages, or in pre-inference validation dialog box) |
-| `Enter`              | Submit message (when chat input focused)                                                                              |
-| `Escape`             | Cancel (in message's edition)                                                                                         |
+| `CTRL + Enter`       | Submit message (when chat input focused)                                                                              |
+| `Escape`             | Cancel (in message's edition, or during a string search )                                                             |
 | `CTRL + S`           | Confirm & save (in message's edition)                                                                                 |
 | `Enter`              | Parse file tree (when path box focused)                                                                               |
 | `↑ / ↓`              | Navigate recent paths (in path box)                                                                                   |

@@ -49,7 +49,7 @@ Bien que ce pattern soit utile, il introduit des difficultés pour garder les co
 
 ---
 
-<h2 id="tech-stack" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⚙️ Stack Technique</h2>
+<h2 id="tech-stack" style="background: rgb(39, 76, 119); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⚙️ Stack Technique</h2>
 
 -   **Ollama** (serveur LLM local avec API REST)
 -   **PyQt6** (framework GUI)
@@ -334,8 +334,8 @@ _Note pour les débutants :_ les LLM MOE (Mixture-Of-Experts) sont plus rapide
 | `Ctrl + Molette de souris` | Zoom in/out de la police (dans les bulles de chat)                                                                                                                                                                         |
 | `PageUp/PageDown`          | Navigation paginée (dans les bulles de chat et autres zones de texte)                                                                                                                                                      |
 | `CTRL + F`                 | Recherche du `mot` sélectionné dans le chat (et dans le dialogue de validation pré-inference),<br>surbrillance des résultats avec précédent/suivant & surbrillance des résultats (dans les messages d'une session ouverte) |
-| `Enter`                    | Envoyer le message (lorsque le champ de saisie du chat a le focus)                                                                                                                                                         |
-| `Escape`                   | Annuler (en cours d'édition d'un message)                                                                                                                                                                                  |
+| `CTRL + Enter`             | Envoyer le message (lorsque le champ de saisie du chat a le focus)                                                                                                                                                         |
+| `Escape`                   | Annuler (en cours d'édition d'un message, lors d'une recherche)                                                                                                                                                            |
 | `CTRL + S`                 | Confirmer & sauvegarder (en cours d'édition d'un message)                                                                                                                                                                  |
 | `Enter`                    | Parcourir l'arborescence de fichiers <br>(lorsque la boîte de chemin `Root folder` a le focus)                                                                                                                             |
 | `↑ / ↓`                    | Naviguer parmi les chemins récents (dans la boîte de chemin `Root folder`)                                                                                                                                                 |
