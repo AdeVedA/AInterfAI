@@ -80,7 +80,7 @@ Bien que ce pattern soit utile, il introduit des difficultés pour garder les co
 
 ---
 
-<h2 id="tech-stack">⚙️ Stack Technique</h2>
+<h2 id="tech-stack" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⚙️ Stack Technique</h2>
 
 - **Ollama** (serveur LLM local avec API REST)
 - **PyQt6** (framework GUI)
@@ -94,7 +94,7 @@ Bien que ce pattern soit utile, il introduit des difficultés pour garder les co
 - **pygments** (coloration syntaxique)
 - **Configs JSON** (paramètres généraux de l'UI, prompts/configs de prompts, filtres du parseur de contexte)
 
-<h2 id="features">🚀 Fonctionnalités</h2>
+<h2 id="features" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">🚀 Fonctionnalités</h2>
 
 ### 🧩 Général (Chat, Barre d'outils...)
 
@@ -201,7 +201,7 @@ Un système modulaire pour enrichir les prompts avec vos documents (connaissance
 
 ---
 
-<h2 id="installation">⚙️ Installation</h2>
+<h2 id="installation" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⚙️ Installation</h2>
 
 ### 0. Installer [Python 3.13+](https://www.python.org/downloads/) (des versions antérieures pourraient fonctionner... je n'ai simplement pas testé !)
 
@@ -358,7 +358,7 @@ _Note pour les débutants :_ les LLM MOE (Mixture-Of-Experts) sont plus rapide
 
 ---
 
-<h2 id="keyboard-shortcuts">⌨️ Raccourcis Clavier</h2>
+<h2 id="keyboard-shortcuts" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⌨️ Raccourcis Clavier</h2>
 
 | Raccourci                  | Contexte                                                                                                                                                                                                                   |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -373,7 +373,7 @@ _Note pour les débutants :_ les LLM MOE (Mixture-Of-Experts) sont plus rapide
 
 ---
 
-<h2 id="file-structure">🗂️ Arborescence du Projet</h2>
+<h2 id="file-structure" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">🗂️ Arborescence du Projet</h2>
 
 ```
 project_root/
@@ -455,7 +455,7 @@ project_root/
 
 ---
 
-<h2 id="license">📜 Licence</h2>
+<h2 id="license" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">📜 Licence</h2>
 
 Ce projet est distribué sous licence GPL v3. Voir le fichier [LICENSE](https://github.com/python-qt-tools/PyQt6-stubs/blob/main/LICENSE) pour plus de détails.
 

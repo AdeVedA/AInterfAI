@@ -79,7 +79,7 @@ While this pattern is useful in this purpose, it also introduces some difficulty
 
 ---
 
-<h2 id="tech-stack">⚙️ Tech Stack</h2>
+<h2 id="tech-stack" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⚙️ Tech Stack</h2>
 
 - **Ollama** (Local LLM server with REST API)
 - **PyQt6** (GUI framework)
@@ -93,7 +93,7 @@ While this pattern is useful in this purpose, it also introduces some difficulty
 - **pygments** (syntax highlighting)
 - **Configs JSON** (gui general parameters, prompts/prompts configs, context parser filtering)
 
-<h2 id="features">🚀 Features</h2>
+<h2 id="features" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">🚀 Features</h2>
 
 ### 🧩 General (Chat, Toolbar...)
 
@@ -200,7 +200,7 @@ A modular system for enriching prompts with your documents (document-based knowl
 
 ---
 
-<h2 id="installation">⚙️ Installation</h2>
+<h2 id="installation" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⚙️ Installation</h2>
 
 ### 0. Install [Python 3.13+](https://www.python.org/downloads/) (earlier versions may work… I just haven’t tested them!)
 
@@ -360,7 +360,7 @@ MOE (Mixture-Of-Experts) LLM are faster and more ressource friendly than Dense L
 
 ---
 
-<h2 id="keyboard-shortcuts">⌨️ Keyboard Shortcuts</h2>
+<h2 id="keyboard-shortcuts" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⌨️ Keyboard Shortcuts</h2>
 
 | Shortcut             | Context                                                                                                               |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -375,7 +375,7 @@ MOE (Mixture-Of-Experts) LLM are faster and more ressource friendly than Dense L
 
 ---
 
-<h2 id="file-structure">🗂️ File Structure</h2>
+<h2 id="file-structure" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">🗂️ File Structure</h2>
 
 ```
 project_root/
@@ -456,7 +456,7 @@ project_root/
 
 ---
 
-<h2 id="license">📜 License</h2>
+<h2 id="license" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">📜 License</h2>
 
 This project is licensed under the GPL v3. See the [LICENSE](https://github.com/python-qt-tools/PyQt6-stubs/blob/main/LICENSE) file for details.
 
