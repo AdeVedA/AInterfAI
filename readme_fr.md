@@ -239,11 +239,11 @@ Vous pouvez utiliser n'importe quel modèle local compatible avec Ollama (`mistr
 ollama pull nomic-embed-text:latest
 ```
 
-### 5. Installer Qdrant
+### 5. Installer [Qdrant](https://github.com/qdrant/qdrant/releases)
 
-→ [https://qdrant.tech/download/](https://qdrant.tech/download/)
+→ [https://github.com/qdrant/qdrant/releases](https://github.com/qdrant/qdrant/releases)
 
-Mettez le fichier qdrant (binary) dans un dossier. Vous **devez** alors indiquer le chemin vers `qdrant.exe` (Windows ex.: C:\BDD\Qdrant\qdrant.exe) ou `qdrant` (mac/linux ex: C:/BDD/Qdrant/qdrant) dans le fichier `.env` à la racine du projet (ouvrez -le avec un editeur de texte, insérez le bon chemin et sauvegardez).
+Téléchargez le fichier correspondant à votre os, décompressez et mettez le fichier qdrant (binary) dans un dossier de votre choix. Vous **devez** alors indiquer le chemin vers `qdrant.exe` (Windows ex.: C:\BDD\Qdrant\qdrant.exe) ou `qdrant` (mac/linux ex: C:/BDD/Qdrant/qdrant) dans le fichier `.env` à la racine du projet (ouvrez -le avec un editeur de texte, insérez le bon chemin et sauvegardez).
 Sinon, autre possibilité, le programme vous demandera le chemin vers qdrant au premier lancement du programme et l'inscrira dans le .env automatiquement.
 Vous pouvez aussi personnaliser le fichier de configuration Qdrant `config.yaml` dans le dossier `project_root\utils` si vous savez ce que vous faites.
 

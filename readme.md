@@ -242,11 +242,11 @@ You can use any local model compatible with Ollama (`mistral`, `qwen3`, `gemma3`
 ollama pull nomic-embed-text:latest
 ```
 
-### 5. Install [Qdrant](https://qdrant.tech/download/)
+### 5. Install [Qdrant](https://github.com/qdrant/qdrant/releases)
 
-→ [https://qdrant.tech/download/](https://qdrant.tech/download/)
+→ [https://github.com/qdrant/qdrant/releases](https://github.com/qdrant/qdrant/releases)
 
-Just put the binary qdrant in a folder. You then **have to** put the path to `qdrant.exe` (Windows e.g.: C:\BDD\Qdrant\qdrant.exe) or `qdrant` (mac/linux e.g.: C:/BDD/Qdrant/qdrant) in project root\.env file (open with a text editor, put the path and save)
+Just put the binary qdrant (inside the archive you downloaded, corresponding to your OS) in a folder. You then **have to** put the path to `qdrant.exe` (Windows e.g.: C:\BDD\Qdrant\qdrant.exe) or `qdrant` (mac/linux e.g.: C:/BDD/Qdrant/qdrant) in project root\.env file (open with a text editor, put the path and save)
 Otherwise, on first run the program will ask for the path to qdrant and put it in place automatically.
 Optionally, customize the Qdrant config file `config.yaml` in the project root\utils folder if you know what you're doing.
 
