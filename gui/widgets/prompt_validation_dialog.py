@@ -103,11 +103,12 @@ class _PromptSearchHelper(QObject):
 #
 def show_prompt_validation_dialog(self, prompt_text: str) -> Optional[str]:
     """Prompt validation dialog with Ctrl+F integrated search box"""
-    dlg = QDialog(self, objectName="config_edit")
+    dlg = QDialog(self, objectName="validation_dialog")
     layout = QVBoxLayout(dlg)
 
     # EDITOR
     edit = QTextEdit(dlg)
+    edit.setObjectName("validation_editor")
     edit.setPlainText(prompt_text)
     edit.setReadOnly(False)
     edit.setFont(self.panel_chat.history_area.font())

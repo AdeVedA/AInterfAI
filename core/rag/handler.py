@@ -5,8 +5,14 @@ from typing import Dict, List
 from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import (Distance, FieldCondition, Filter,
-                                       MatchValue, PointStruct, VectorParams)
+from qdrant_client.http.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    MatchValue,
+    PointStruct,
+    VectorParams,
+)
 from qdrant_client.models import MatchAny
 
 from core.rag.config import RAGConfig

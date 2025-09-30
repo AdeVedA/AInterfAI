@@ -538,9 +538,7 @@ class SessionPanel(QWidget):
             if isinstance(sessions_by_category, list):
                 sessions_by_category = {"All": sessions_by_category}
             by_folder = defaultdict(list)
-            src = (
-                sessions_by_category.get("All", []) if isinstance(sessions_by_category, dict) else sessions_by_category
-            )
+            src = sessions_by_category.get("All", []) if isinstance(sessions_by_category, dict) else sessions_by_category
             for s in src:
                 by_folder[s.folder_id].append(s)
 
@@ -676,6 +674,8 @@ class SessionPanel(QWidget):
 
         old_text = lbl.text()
         edit = QLineEdit(widget)
+        edit.setObjectName("session_name_edit")
+        edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         edit.setText(old_text)
         edit.selectAll()
         edit.setFocus(Qt.FocusReason.MouseFocusReason)

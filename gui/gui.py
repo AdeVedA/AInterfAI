@@ -12,14 +12,7 @@ from typing import Optional
 
 from PyQt6.QtCore import QByteArray, Qt, QTimer
 from PyQt6.QtGui import QCursor
-from PyQt6.QtWidgets import (
-    QApplication,
-    QFileDialog,
-    QInputDialog,
-    QMainWindow,
-    QMessageBox,
-    QSplitter,
-)
+from PyQt6.QtWidgets import QApplication, QFileDialog, QInputDialog, QMainWindow, QMessageBox, QSplitter
 
 from core.config_manager import ConfigManager
 from core.context_parser import ContextParser
@@ -61,9 +54,7 @@ class MainWindow(QMainWindow):
         self.session_manager = session_manager
         self.llm_manager = llm_manager
         self.thread_manager = ThreadManager()
-        self.prompt_manager = PromptManager(
-            self.session_manager.db, session_manager=self.session_manager
-        )
+        self.prompt_manager = PromptManager(self.session_manager.db, session_manager=self.session_manager)
         self.prompt_config_manager = PromptConfigManager()
         self.context_parser = ContextParser(config_path=Path("core/context_parser_config.json"))
         self.llm_worker = None
@@ -72,7 +63,6 @@ class MainWindow(QMainWindow):
         self.llm_loaded = False
         self.current_llm = None
         self.current_llm_name = None
-        self.current_prompt_name = None
         self.current_session_id = None
         self.generated_context: str = ""
         self.load_keep_alive_from_json()
@@ -98,9 +88,7 @@ class MainWindow(QMainWindow):
             session_manager=self.session_manager,
             thread_manager=self.thread_manager,
         )
-        self.panel_context = ContextBuilderPanel(
-            self, parser=self.context_parser, thread_manager=self.thread_manager
-        )
+        self.panel_context = ContextBuilderPanel(self, parser=self.context_parser, thread_manager=self.thread_manager)
         self.panel_config = ConfigPanel(self, session_manager=self.session_manager)
         self.message_processor = UserMessageProcessor(
             prompt_manager=self.prompt_manager,
@@ -109,10 +97,16 @@ class MainWindow(QMainWindow):
             rag_config=self.panel_context._rag_config,
         )
 
+        # Splitter entre sessions et chat (gauche)
+        self.left_splitter = QSplitter(Qt.Orientation.Horizontal, self)
+        self.left_splitter.setObjectName("main_left")
+        self.left_splitter.addWidget(self.panel_sessions)
+        self.left_splitter.addWidget(self.panel_chat)
+
+        # Autres Splitters
         self.splitter = QSplitter(Qt.Orientation.Horizontal, self)
         self.splitter.setObjectName("main_splitters")
-        self.splitter.addWidget(self.panel_sessions)
-        self.splitter.addWidget(self.panel_chat)
+        self.splitter.addWidget(self.left_splitter)
         self.splitter.addWidget(self.panel_context)
         self.splitter.addWidget(self.panel_config)
         self.setCentralWidget(self.splitter)
@@ -146,16 +140,10 @@ class MainWindow(QMainWindow):
         self.toolbar.prompt_changed.connect(self.on_load_role_llm_config)
         self.toolbar.new_prompt.connect(self.on_new_prompt)
         # hide/show panels
-        self.toolbar.toggle_sessions.connect(
-            lambda visible: self._toggle_panel(self.panel_sessions, visible)
-        )
+        self.toolbar.toggle_sessions.connect(lambda visible: self._toggle_panel(self.panel_sessions, visible))
         self.toolbar.toggle_chat_alone.connect(lambda visible: self._toggle_chat_panel(visible))
-        self.toolbar.toggle_context.connect(
-            lambda visible: self._toggle_panel(self.panel_context, visible)
-        )
-        self.toolbar.toggle_config.connect(
-            lambda visible: self._toggle_panel(self.panel_config, visible)
-        )
+        self.toolbar.toggle_context.connect(lambda visible: self._toggle_panel(self.panel_context, visible))
+        self.toolbar.toggle_config.connect(lambda visible: self._toggle_panel(self.panel_config, visible))
         # Context parser
         self.panel_context.context_generated.connect(self.on_context_generated)
         self.panel_context.new_session_requested.connect(self.create_new_session)
@@ -252,7 +240,7 @@ class MainWindow(QMainWindow):
         selected_files = self.panel_context.selected_files()
         session_id = self.current_session_id
         llm_name = self.toolbar.llm_combo.currentText()
-        prompt_name = self.toolbar.prompt_button.currentText()
+        role_name = self.toolbar.prompt_button.currentText()
         config_id = self.current_config_id
         # print(
         #     "mode_id : ",
@@ -265,8 +253,8 @@ class MainWindow(QMainWindow):
         #     session_id,
         #     "llm_name : ",
         #     llm_name,
-        #     "prompt_name : ",
-        #     prompt_name,
+        #     "role_name : ",
+        #     role_name,
         #     "config_id : ",
         #     config_id,
         # )
@@ -330,7 +318,7 @@ class MainWindow(QMainWindow):
             "llm",
             "",
             llm_name=llm_name,
-            prompt_type=prompt_name,
+            prompt_type=role_name,
             config_id=config_id,
         )
         llm_message_id = int(llm_msg.id)
@@ -502,7 +490,7 @@ class MainWindow(QMainWindow):
         # 4) Curseur normal
         QApplication.restoreOverrideCursor()
 
-    def on_new_prompt(self, prompt_name: str, prompt_system_prompt: str):
+    def on_new_prompt(self, role_name: str, role_system_prompt: str):
         """
         Slot called when choosing '+ New Role' in the combo.
         1) Asks the user a name and a default system prompt for the Prompt type
@@ -514,9 +502,9 @@ class MainWindow(QMainWindow):
         # 1) Créer en base via ConfigManager
         #    On reprend les defaults s'il y en a, sinon on part d'un dict vide.
 
-        if prompt_name not in self.prompt_config_manager.get_types():
+        if role_name not in self.prompt_config_manager.get_types():
             prompt_dict = {
-                "description": prompt_system_prompt,
+                "description": role_system_prompt,
                 "temperature": 0.7,
                 "top_k": 40,
                 "repeat_penalty": 1.1,
@@ -524,10 +512,10 @@ class MainWindow(QMainWindow):
                 "min_p": 0.05,
                 "default_max_tokens": 8192,
             }
-            self.prompt_config_manager.add_new_prompt(prompt_name, prompt_dict)
-        defaults = self.prompt_config_manager.get_config(prompt_name)
+            self.prompt_config_manager.add_new_prompt(role_name, prompt_dict)
+        defaults = self.prompt_config_manager.get_config(role_name)
         try:
-            self.config_manager.save_role_config(llm_name, prompt_name, defaults)
+            self.config_manager.save_role_config(llm_name, role_name, defaults)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Impossible to create the prompt : {e}")
             return
@@ -536,7 +524,7 @@ class MainWindow(QMainWindow):
         self.toolbar._build_prompt_menu()
 
         # 3) Sélectionner le nouvel prompt
-        self.toolbar._prompt_action_triggered(prompt_name)
+        self.toolbar._prompt_action_triggered(role_name)
 
         # 4) recharger la config de cet prompt dans le panneau ConfigPanel
         self.on_load_role_llm_config()
@@ -616,9 +604,7 @@ class MainWindow(QMainWindow):
         if new_name:
             self.session_manager.rename_session(session_id, new_name)
             # recharger la liste
-            self.panel_sessions.load_sessions(
-                self.session_manager.list_folders(), self.session_manager.list_sessions()
-            )
+            self.panel_sessions.load_sessions(self.session_manager.list_folders(), self.session_manager.list_sessions())
             print(f"session n°{session_id} renamed : {new_name}")
         else:
             return
@@ -633,9 +619,7 @@ class MainWindow(QMainWindow):
         )
         if confirm == QMessageBox.StandardButton.Yes:
             self.session_manager.delete_session(session_id)
-            self.panel_sessions.load_sessions(
-                self.session_manager.list_folders(), self.session_manager.list_sessions()
-            )
+            self.panel_sessions.load_sessions(self.session_manager.list_folders(), self.session_manager.list_sessions())
             # si c'était la session courante, on vide le chat
             if self.current_session_id == session_id:
                 self.panel_chat.clear_history()
@@ -729,16 +713,14 @@ class MainWindow(QMainWindow):
         It is stored to inject it then into the prompt system.
         """
         self.generated_context = markdown
-        print(
-            f"Context files converted to markdown ({len(markdown.split())} words) and saved in {out_path}"
-        )
+        print(f"Context files converted to markdown ({len(markdown.split())} words) and saved in {out_path}")
 
     def _handle_export_markdown(self, session):
+        mydocs_path = Path("mydocs")
+        if not mydocs_path.exists() or not mydocs_path.is_dir():
+            mydocs_path.mkdir()
         path = QFileDialog.getSaveFileName(
-            self,
-            "Export Session to Markdown",
-            f"{session.session_name}.md",
-            "Markdown Files (*.md)",
+            self, "Export Session to Markdown", f"mydocs\\{session.session_name}.md", "Markdown Files (*.md)"
         )[0]
         if not path:
             return
@@ -751,8 +733,11 @@ class MainWindow(QMainWindow):
             print(f"{session.session_name}.md saved in {path}")
 
     def _handle_export_html(self, session):
+        mydocs_path = Path("mydocs")
+        if not mydocs_path.exists() or not mydocs_path.is_dir():
+            mydocs_path.mkdir()
         path = QFileDialog.getSaveFileName(
-            self, "Export Session to HTML", f"{session.session_name}.html", "HTML Files (*.html)"
+            self, "Export Session to HTML", f"mydocs\\{session.session_name}.html", "HTML Files (*.html)"
         )[0]
         if not path:
             return
@@ -791,26 +776,24 @@ class MainWindow(QMainWindow):
             return
         self.apply_role_llm_config(llm, prompt)
 
-    def apply_role_llm_config(self, llm_name: str, prompt_name: str) -> Optional[PromptConfig]:
+    def apply_role_llm_config(self, llm_name: str, role_name: str) -> Optional[PromptConfig]:
         """
-        Loads or creates the config PromptConfig for (llm_name, prompt_name),
+        Loads or creates the config PromptConfig for (llm_name, role_name),
         updates the widgets of panel_config and returns the cfg object.
         """
         # 0)
         # 1) Charger ou créer la config
-        cfg = self.config_manager.load_role_config(llm_name, prompt_name)
+        cfg = self.config_manager.load_role_config(llm_name, role_name)
 
         if cfg is None:
             # Defaults depuis JSON
-            prompt_defaults = self.prompt_config_manager.get_config(prompt_name)
+            prompt_defaults = self.prompt_config_manager.get_config(role_name)
             # Fusion avec les valeurs DB LLMProperties
-            merged_defaults = self.llm_manager.props_mgr.merge_with_defaults(
-                prompt_defaults, llm_name
-            )
+            merged_defaults = self.llm_manager.props_mgr.merge_with_defaults(prompt_defaults, llm_name)
 
             cfg = self.config_manager.save_role_config(
                 llm_name,
-                prompt_name,
+                role_name,
                 merged_defaults,
             )
 
@@ -818,7 +801,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(
                 self,
                 "Error",
-                f'Impossible to load/create the config for the prompt "{prompt_name}" and the LLM "{llm_name}".',
+                f'Impossible to load/create the config for the prompt "{role_name}" and the LLM "{llm_name}".',
             )
             return None
 

@@ -25,7 +25,9 @@ class SessionManager:
         Return all sessions ordered by creation date descending.
         """
         # print("Listing sessions...")
-        sessions = self.db.query(Session).order_by(Session.created_at.desc()).all()
+        sessions = (
+            self.db.query(Session).order_by(Session.created_at.desc(), Session.id.desc()).all()
+        )
         # print(f"Sessions récupérées : {sessions}")
         return sessions
 

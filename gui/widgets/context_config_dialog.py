@@ -94,9 +94,7 @@ class ContextConfigDialog(QDialog):
         name_edit = QLineEdit(name)
         name_edit.setObjectName("config_tab_name_ed")
         name_edit.setPlaceholderText("Configuration name")
-        name_edit.textChanged.connect(
-            lambda text, t=tab: self.tabs.setTabText(self.tabs.indexOf(t), text)
-        )
+        name_edit.textChanged.connect(lambda text, t=tab: self.tabs.setTabText(self.tabs.indexOf(t), text))
         hbox.addWidget(name_label)
         hbox.addWidget(name_edit)
         vbox.addLayout(hbox)

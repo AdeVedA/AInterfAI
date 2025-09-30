@@ -20,17 +20,17 @@ class LLMWorker(QObject):
     message_update_requested = pyqtSignal(int, str)  # (message_id, new_content)
     title_update_requested = pyqtSignal(int, str)  # (session_id, new_title)
 
-    def __init__(
-        self, llm, session_id: int, session_manager, message_id: int, generate_title: bool = True
-    ):
+    def __init__(self, llm, session_id: int, session_manager, message_id: int, generate_title: bool = True):
         super().__init__()
         self.llm = llm
         self.session_id = session_id
         self.session_manager = session_manager
         self.message_id = message_id
-        self._stream_buffer = ""  # Contenu complet reçu du LLM
+
         self._prompt = ""  # Stocke le message utilisateur
+        self._stream_buffer = ""  # Contenu complet reçu du LLM
         self._stop_flag = False
+
         self._generate_title = generate_title
 
     def start(self, prompt: str):
@@ -99,7 +99,7 @@ class LLMWorker(QObject):
             # print("LLMWorker: stop after emiting stream_buffer through llm_response_complete")
 
             # génération d'un titre automatique
-            if self.session_id and self._generate_title:
+            if self.session_id and self._generate_title and not self._stop_flag:
                 print("generating session title...")
                 await self._maybe_generate_session_title()
 

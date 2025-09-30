@@ -245,13 +245,13 @@ class MarkdownRenderer:
         return _RE_KEYCAP.sub(_repl, text)
 
     def render(self, markdown_text: str) -> str:
-        # 1) soft line breaks (outside fenced code)
+        # soft line breaks (outside fenced code)
         markdown_text = self._add_soft_line_breaks(markdown_text)
 
-        # 2) conversion des chiffres encerclés
+        # conversion des chiffres encerclés
         markdown_text = self._replace_keycap_emoji(markdown_text)
 
-        # 3) markdown -> html (keep fenced code blocks)
+        # markdown -> html (keep fenced code blocks)
         html_body = markdown2.markdown(
             markdown_text,
             extras=[
@@ -265,7 +265,7 @@ class MarkdownRenderer:
             ],
         )
 
-        # 4) post-process: pygments highlight + couleurs
+        # post-process: pygments highlight + couleurs
         html_body = self._highlight_code_html(html_body)
 
         return html_body

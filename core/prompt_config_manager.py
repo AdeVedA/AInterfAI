@@ -48,7 +48,7 @@ class PromptConfigManager:
         """
         Detect available prompt config files.
         Files must match pattern: prompt_config_defaults_XX.json
-        Returns mapping { "en": Path(...), "fr": Path(...),...}
+        Returns mapping { "en": Path(...), "fr": Path(...), ... }
         """
         langs: dict[str, Path] = {}
         for file in CONFIG_DIR.glob("prompt_config_defaults_*.json"):
@@ -93,9 +93,9 @@ class PromptConfigManager:
         return {name: config["description"] for name, config in self._configs.items()}
 
     # Méthodes de recherche
-    def get_config(self, prompt_name: str) -> PromptConfigDefaults | None:
+    def get_config(self, role_name: str) -> PromptConfigDefaults | None:
         """Returns a specific configuration by its name."""
-        return self._configs.get(prompt_name, {})
+        return self._configs.get(role_name, {})
 
     def get_hierarchy(self) -> Dict[str, Dict[str, object]]:
         """

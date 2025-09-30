@@ -200,7 +200,7 @@ class UserMessageProcessor:
         # généré `extra_context` on l'utilise tel quel, sinon on garde le
         # prompt déjà formaté.
         if extra_context:
-            final_prompt = extra_context
+            final_prompt = f"{formatted}\n{extra_context}"
         else:
             final_prompt = formatted
 

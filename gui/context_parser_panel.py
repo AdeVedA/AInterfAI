@@ -126,9 +126,7 @@ class ContextBuilderPanel(QWidget):
         self.thread_manager = thread_manager
         self.current_session_id = None
         self.parser = parser
-        self._error_handled = (
-            False  # Flag pour gérer l'erreur de dépassement de la limite de fichiers parsés
-        )
+        self._error_handled = False  # Flag pour gérer l'erreur de dépassement de la limite de fichiers parsés
         self.expanded = set()  # on initialise à l'instanciation, on remplira dans _analyse
         self.folder_items: dict[Path, QTreeWidgetItem] = {}
         # construire l'UI de base (OFF + FULL)
@@ -238,9 +236,7 @@ class ContextBuilderPanel(QWidget):
         self.path_combo.clear()
         self.path_combo.lineEdit().clear()
         self.path_combo.currentIndexChanged.connect(
-            lambda: self.path_combo.setToolTip(
-                f"current context source folder : {Path(self.path_combo.currentText())}"
-            )
+            lambda: self.path_combo.setToolTip(f"current context source folder : {Path(self.path_combo.currentText())}")
         )
         # h_path.addWidget(QLabel(""), 1)
         h_path.addWidget(self.path_combo, 5)
@@ -289,9 +285,7 @@ class ContextBuilderPanel(QWidget):
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
         header.setStretchLastSection(False)
         # SizePolicy pour que le widget puisse devenir étroit
-        self.tree.setSizePolicy(
-            QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        )
+        self.tree.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
         main.addWidget(self.tree, 1)
 
         spacer1 = QWidget(self)
@@ -335,9 +329,7 @@ class ContextBuilderPanel(QWidget):
             style="",
         )
         self._lbl_spinner.hide()
-        self._analyse_spinner = create_spinner(
-            text="Scanning files ...", object_name="scan_spinner", style=""
-        )
+        self._analyse_spinner = create_spinner(text="Scanning files ...", object_name="scan_spinner", style="")
         self._analyse_spinner.hide()
 
         # Message de statut
@@ -443,9 +435,7 @@ class ContextBuilderPanel(QWidget):
             self.path_combo.addItem(p)
         if self.path_combo.count() > 0:
             self.path_combo.setCurrentIndex(0)  # sélectionner le premier
-            self.path_combo.setToolTip(
-                f"current context source folder : {Path(self.path_combo.currentText())}"
-            )
+            self.path_combo.setToolTip(f"current context source folder : {Path(self.path_combo.currentText())}")
         else:
             self.path_combo.setToolTip("No context source folder available")
         self.path_combo.blockSignals(False)
@@ -489,16 +479,10 @@ class ContextBuilderPanel(QWidget):
             self._analyze()
 
         # Si on vient de passer en RAG et qu'on a déjà un session_id, crée/rafraîchis le handler
-        if (
-            mode == 2
-            and getattr(self, "current_session_id", None)
-            and getattr(self, "_processor", None)
-        ):
+        if mode == 2 and getattr(self, "current_session_id", None) and getattr(self, "_processor", None):
             self.rag_handler_requested.emit(self.current_session_id)
             try:
-                self._rag_handler = self._processor.ensure_and_get_rag_handler(
-                    self.current_session_id
-                )
+                self._rag_handler = self._processor.ensure_and_get_rag_handler(self.current_session_id)
             except Exception as e:
                 print(f"ContextBuilder - unable to ensure RAGHandler: {e}")
             self._rag_handler = None
@@ -515,25 +499,17 @@ class ContextBuilderPanel(QWidget):
 
         # if self._rag_handler is None or self._rag_handler.session_id != self.current_session_id:
         #     self._rag_handler = RAGHandler(self._rag_config, self.current_session_id)
-        if (
-            self._rag_handler is None or self._rag_handler.session_id != self.current_session_id
-        ) and getattr(self, "_processor", None):
+        if (self._rag_handler is None or self._rag_handler.session_id != self.current_session_id) and getattr(
+            self, "_processor", None
+        ):
             try:
-                self._rag_handler = self._processor.ensure_and_get_rag_handler(
-                    self.current_session_id
-                )
+                self._rag_handler = self._processor.ensure_and_get_rag_handler(self.current_session_id)
             except Exception as e:
-                QMessageBox.warning(
-                    self, "Error", f"The RAG manager could not be initialized:\n{e}"
-                )
+                QMessageBox.warning(self, "Error", f"The RAG manager could not be initialized:\n{e}")
                 return
 
         if self._rag_handler is None:
-            QMessageBox.warning(
-                self,
-                "Error",
-                "The Rag manager is not initialized. Please create/select a session first.",
-            )
+            QMessageBox.warning(self, "Error", "The Rag manager is not initialized. Please create/select a session first.")
             return
         files = self.selected_files()
         # print(f"debug : fichiers sélectionnés pour RAG : {files}")
@@ -573,9 +549,7 @@ class ContextBuilderPanel(QWidget):
         self._lbl_rag_status.show()
 
     def _on_refresh_index(self):
-        print(
-            "Index refreshed with K =", self._sb_k.value(), "chunk_size =", self._sb_chunk.value()
-        )
+        print("Index refreshed with K =", self._sb_k.value(), "chunk_size =", self._sb_chunk.value())
 
     def get_context_mode(self) -> int:
         """Returns the current context mode : 0=OFF, 1=FULL, 2=RAG"""
@@ -614,11 +588,7 @@ class ContextBuilderPanel(QWidget):
 
         old_thread = getattr(self, "_scan_thread", None)
         #  Si un scan était déjà en cours : l'interrompre proprement
-        if (
-            isinstance(old_thread, QThread)
-            and not sip.isdeleted(old_thread)
-            and old_thread.isRunning()
-        ):
+        if isinstance(old_thread, QThread) and not sip.isdeleted(old_thread) and old_thread.isRunning():
             old_thread.quit()
             old_thread.wait()  # attendre la fin du thread précédent
 
@@ -691,11 +661,7 @@ class ContextBuilderPanel(QWidget):
             #    return lambda: self._on_folder_toggle_clicked(p)
 
             w = FolderRowWidget(
-                name=(
-                    f"📂--{str(base).split("\\")[-1].upper()}--📂"
-                    if parent == base
-                    else str(parent.relative_to(base))
-                ),
+                name=(f"📂--{str(base).split("\\")[-1].upper()}--📂" if parent == base else str(parent.relative_to(base))),
                 expanded=(parent in self.expanded),
                 toggle_callback=make_toggle_children(parent),
             )
@@ -732,9 +698,7 @@ class ContextBuilderPanel(QWidget):
                     # **restauration** de l'état coché
                     if f in prev_checked:
                         wf.checkbox.setChecked(True)
-                    wf.checkbox.stateChanged.connect(
-                        lambda st, item=fi: self._on_context_check_changed(item, st)
-                    )
+                    wf.checkbox.stateChanged.connect(lambda st, item=fi: self._on_context_check_changed(item, st))
                     self.tree.setItemWidget(fi, 0, wf)
 
         self.tree.expandAll()
@@ -756,9 +720,7 @@ class ContextBuilderPanel(QWidget):
         if self._error_handled:
             return
         self._error_handled = True
-        if (
-            isinstance(msg, TooManyFilesError) or "More than" in msg
-        ):  # provenance de TooManyFilesError
+        if isinstance(msg, TooManyFilesError) or "More than" in msg:  # provenance de TooManyFilesError
             reply = QMessageBox.question(
                 self,
                 "Too many files",

@@ -1,6 +1,7 @@
 import re
 import sys
 
+from PyQt6 import QtCore
 from PyQt6.QtCore import (
     Q_ARG,
     QEvent,
@@ -12,14 +13,7 @@ from PyQt6.QtCore import (
     pyqtSignal,
     pyqtSlot,
 )
-from PyQt6.QtGui import (
-    QClipboard,
-    QFont,
-    QKeySequence,
-    QShortcut,
-    QTextOption,
-    QWheelEvent,
-)
+from PyQt6.QtGui import QClipboard, QFont, QKeySequence, QShortcut, QTextOption, QWheelEvent
 from PyQt6.QtWidgets import (
     QApplication,
     QFrame,
@@ -314,7 +308,9 @@ class ChatPanel(QWidget):
         self._last_bubble_width = None
         self.llm_streaming_started = False  # état du streaming
         self.auto_scroll_enabled = True  # auto-scroll vers le bas par defaut
-        self._block_wheel_scroll = False  # pour bloquer les scoll molettes dans ctrl+molette (zoom)
+        self._block_wheel_scroll = (
+            False  # pour bloquer les scoll molettes dans ctrl+molette (zoom)
+        )
         self._current_render_message_id = None
         self.llm_bubble_widget = None
         self.llm_waiting_widget = None
@@ -365,12 +361,16 @@ class ChatPanel(QWidget):
         self.history_token_count_label = QLabel("History total tokens : ", self.console_overlay)
         self.history_token_count_label.setVisible(False)
         self.history_token_count_label.setObjectName("console_chathist_token_count")
-        self.history_token_count_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        self.history_token_count_label.setAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop
+        )
 
         self.history_token_count = QLabel("0", self.console_overlay)
         self.history_token_count.setObjectName("console_chathist_token_count")
         self.history_token_count.setToolTip('Session\'s "Chat History" total Tokens count')
-        self.history_token_count.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        self.history_token_count.setAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop
+        )
 
         layout.addWidget(self._btn_toggle_console)
         layout.addWidget(self.btn_clear)
@@ -416,9 +416,7 @@ class ChatPanel(QWidget):
                         html = tb.toHtml()
 
                         html = re.sub(r"<style>.*?</style>", "", html, flags=re.DOTALL)
-                        final_html = (
-                            f"<html><head><meta charset='utf-8'><style>{css}</style></head><body>{html}</body></html>"
-                        )
+                        final_html = f"<html><head><meta charset='utf-8'><style>{css}</style></head><body>{html}</body></html>"
                         tb.setHtml(final_html)
                     except Exception:
                         pass
@@ -486,6 +484,14 @@ class ChatPanel(QWidget):
         """
         tb = QTextBrowser()
         tb.setObjectName("chatText")
+        tb.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+
+        def show_browser_menu(pos: QtCore.QPoint):
+            menu = tb.createStandardContextMenu()
+            menu.setObjectName("chatTextMenu")
+            menu.exec(tb.mapToGlobal(pos))
+
+        tb.customContextMenuRequested.connect(show_browser_menu)
         tb.setContentsMargins(0, 0, 0, 0)
         # capter Ctrl+Wheel même lorsqu'on survole la bulle
         tb.installEventFilter(self)
@@ -499,7 +505,10 @@ class ChatPanel(QWidget):
         tb.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
         tb.setWordWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
         # interaction
-        flags = Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse
+        flags = (
+            Qt.TextInteractionFlag.TextSelectableByMouse
+            | Qt.TextInteractionFlag.LinksAccessibleByMouse
+        )
         tb.setTextInteractionFlags(flags)
         # size policy: expanding horizontal, fixed vertical => hauteur fixée plus tard
         tb.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -726,7 +735,9 @@ class ChatPanel(QWidget):
         doc.setTextWidth(tb.viewport().width())
         height = doc.size().height()
         tb.setFixedHeight(int(height) + 2)
-        bubble.setFixedHeight(int(height + bubble.contentsMargins().top() + bubble.contentsMargins().bottom() + 2))
+        bubble.setFixedHeight(
+            int(height + bubble.contentsMargins().top() + bubble.contentsMargins().bottom() + 2)
+        )
 
         # 5) Forcer le relayout de tout le chat
         if not self._bubble_update_timer.isActive():
@@ -823,7 +834,9 @@ class ChatPanel(QWidget):
         css = getattr(self, "_current_css", "")
         if css:
             # Envelopper le HTML (html ici est le fragment renvoyé par Renderer)
-            final_html = f"<html><head><meta charset='utf-8'>{css}</head><body>{html}</body></html>"
+            final_html = (
+                f"<html><head><meta charset='utf-8'>{css}</head><body>{html}</body></html>"
+            )
         else:
             final_html = html
 
@@ -914,7 +927,10 @@ class ChatPanel(QWidget):
             bubble.setMaximumWidth(avail)
             tb = bubble.findChild((QTextBrowser, QTextEdit))
             if tb:
-                inner = avail - (bubble.layout().contentsMargins().left() + bubble.layout().contentsMargins().right())
+                inner = avail - (
+                    bubble.layout().contentsMargins().left()
+                    + bubble.layout().contentsMargins().right()
+                )
                 tb.setMaximumWidth(inner)
 
     def _update_bubble_widths(self):
@@ -1105,8 +1121,12 @@ class ChatPanel(QWidget):
             return
 
         self._btn_copy.clicked.connect(lambda: self._copy_bubble(self._active_bubble, message_id))
-        self._btn_edit.clicked.connect(lambda: self._start_edit(self._active_bubble, is_user, message_id))
-        self._btn_delete.clicked.connect(lambda: self._delete_bubble(self._active_bubble, message_id))
+        self._btn_edit.clicked.connect(
+            lambda: self._start_edit(self._active_bubble, is_user, message_id)
+        )
+        self._btn_delete.clicked.connect(
+            lambda: self._delete_bubble(self._active_bubble, message_id)
+        )
 
         self._reposition_overlays()
         self._btn_copy.show()
@@ -1140,7 +1160,9 @@ class ChatPanel(QWidget):
             y = max(margin, min(y, vp.height() - self._btn_edit.height() - margin))
             self._btn_delete.move(int(x), int(y))
             self._btn_edit.move(int(x) - self._btn_edit.width() - margin, int(y))
-            self._btn_copy.move(int(x) - self._btn_edit.width() - self._btn_copy.width() - margin - margin, int(y))
+            self._btn_copy.move(
+                int(x) - self._btn_edit.width() - self._btn_copy.width() - margin - margin, int(y)
+            )
 
             # Afficher les boutons
             self._btn_copy.show()
@@ -1252,7 +1274,9 @@ class ChatPanel(QWidget):
         # Connexions
         btn_cancel.clicked.connect(lambda: self._cancel_edit(edit_frame, bubble))
         shortcut_cancel.activated.connect(lambda: self._cancel_edit(edit_frame, bubble))
-        btn_modify.clicked.connect(lambda: self._confirm_edit(edit_frame, message_id, editor.toPlainText(), is_user))
+        btn_modify.clicked.connect(
+            lambda: self._confirm_edit(edit_frame, message_id, editor.toPlainText(), is_user)
+        )
         shortcut_save.activated.connect(
             lambda: self._confirm_edit(edit_frame, message_id, editor.toPlainText(), is_user)
         )
@@ -1349,7 +1373,9 @@ class ChatPanel(QWidget):
 
     def _delete_bubble(self, bubble: QFrame, message_id: int):
         """Removes the bubble and the line from the Database."""
-        reply = QMessageBox.question(self, "Delete message", "Do you really want to delete this message?")
+        reply = QMessageBox.question(
+            self, "Delete message", "Do you really want to delete this message?"
+        )
         if reply == QMessageBox.StandardButton.Yes:
             self.session_manager.delete_message(message_id)
             idx = self.history_layout.indexOf(bubble)
@@ -1420,7 +1446,10 @@ class ChatPanel(QWidget):
             return False  # laisser propager l'event normal
 
         # Intercepter PgUp / PgDown émis depuis une bulle (QTextBrowser) ou sa viewport
-        if event.type() == QEvent.Type.KeyPress and event.key() in (Qt.Key.Key_PageUp, Qt.Key.Key_PageDown):
+        if event.type() == QEvent.Type.KeyPress and event.key() in (
+            Qt.Key.Key_PageUp,
+            Qt.Key.Key_PageDown,
+        ):
             # si l'input a le focus, laisser l'input gérer PgUp/PgDown naturellement
             if self.input.hasFocus():
                 return False
@@ -1477,7 +1506,9 @@ class ChatPanel(QWidget):
                 x = global_pos.x() - 200
 
                 if global_pos.y() > 0:
-                    y = max(0, global_pos.y() - self.search_dialog.sizeHint().height() - 5)  # juste au-dessus
+                    y = max(
+                        0, global_pos.y() - self.search_dialog.sizeHint().height() - 5
+                    )  # juste au-dessus
                 else:
                     y = min(0, global_pos.y() - self.search_dialog.sizeHint().height() - 5)
                 self.search_dialog.move(x, y)

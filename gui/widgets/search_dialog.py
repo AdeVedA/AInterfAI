@@ -1,15 +1,6 @@
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QTextCursor
-from PyQt6.QtWidgets import (
-    QDialog,
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QSizePolicy,
-    QVBoxLayout,
-)
+from PyQt6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSizePolicy, QVBoxLayout
 
 
 class SearchHighlighter(QSyntaxHighlighter):
@@ -89,9 +80,7 @@ class SearchDialog(QDialog):
         self.setWindowTitle("Search in chat")
         self.setObjectName("searchDialog")
         # Tool -> au dessus de fenêtre parent, frameless -> sans bordures # (, ...stay on top)
-        self.setWindowFlag(
-            Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint
-        )  # Qt.WindowType.WindowStaysOnTopHint
+        self.setWindowFlag(Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint)  # Qt.WindowType.WindowStaysOnTopHint
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
         self.setAutoFillBackground(False)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -137,9 +126,7 @@ class SearchDialog(QDialog):
         btn_box.addWidget(self.prev_btn)
         btn_box.addWidget(self.next_btn)
         btn_box.addStretch()
-        btn_box.addWidget(
-            self.close_btn, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight
-        )
+        btn_box.addWidget(self.close_btn, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
 
         right_box = QVBoxLayout()
         right_box.setSpacing(2)
@@ -220,9 +207,7 @@ class SearchDialog(QDialog):
 
             # append to matches à partir de ce highlighter
             for start, length in highlighter.matches:
-                self.matches.append(
-                    {"bubble": tb, "start": start, "length": length, "highlighter": highlighter}
-                )
+                self.matches.append({"bubble": tb, "start": start, "length": length, "highlighter": highlighter})
 
         self._last_search_text = search_text
 
@@ -233,9 +218,7 @@ class SearchDialog(QDialog):
 
         # update label
         match = "matches" if len(self.matches) > 1 else "match"
-        self.label.setText(
-            f"{self.current_index + 1 if self.matches else 0}/{len(self.matches)} {match} found"
-        )
+        self.label.setText(f"{self.current_index + 1 if self.matches else 0}/{len(self.matches)} {match} found")
 
     def _clear_all_highlights(self):
         """Clear all highlights and reset cache. Perform a one-time manual cleanup of any leftover formats"""

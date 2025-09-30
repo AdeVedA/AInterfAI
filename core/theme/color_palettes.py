@@ -19,7 +19,7 @@ COLOR_PALETTES = {
         "Base": "rgb(38, 40, 51)",
         "Base1": "rgb(23, 25, 35)",
         "Danger": "rgba(109, 45, 57, 0.7)",
-        "Warning": "rgba(245, 158, 11,0.4)",
+        "Warning": "rgba(245, 158, 11, 0.4)",
         "Text": "rgb(239, 233, 254)",
         "Text1": "rgb(252, 218, 209)",
         "Text2": "rgb(203, 213, 225)",

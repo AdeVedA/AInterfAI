@@ -52,9 +52,7 @@ class Toolbar(QToolBar):
     load_prompt = pyqtSignal()
     theme_changed = pyqtSignal(str)
 
-    def __init__(
-        self, parent=None, theme_manager=None, llm_manager=None, prompt_config_manager=None
-    ):
+    def __init__(self, parent=None, theme_manager=None, llm_manager=None, prompt_config_manager=None):
         super().__init__(parent)
         self.theme_manager = theme_manager
         self.llm_manager = llm_manager
@@ -134,9 +132,7 @@ class Toolbar(QToolBar):
 
         # Afficher la boite de dialogue -modifiable- de requête (avec historique/contexte/RAG)
         self.show_query_dialog = True
-        self.action_show_query = QAction(
-            "Show Final Query Dialog before sending", self, checkable=True
-        )
+        self.action_show_query = QAction("Show Final Query Dialog before sending", self, checkable=True)
         self.action_show_query.setChecked(self.show_query_dialog)
         self.action_show_query.setToolTip(
             "Show/hide the final query dialog box before sending request to LLM.\n"
@@ -146,9 +142,7 @@ class Toolbar(QToolBar):
         settings_menu.addAction(self.action_show_query)
 
         self.generate_title = True
-        self.action_generate_title = QAction(
-            "Generate a session title automatically", self, checkable=True
-        )
+        self.action_generate_title = QAction("Generate a session title automatically", self, checkable=True)
         self.action_generate_title.setChecked(self.generate_title)
         self.action_generate_title.setToolTip(
             "If your session has no title (e.g. 'session_5'), asks the LLM to generate a title summarizing"
@@ -287,9 +281,7 @@ class Toolbar(QToolBar):
         self.btn_load_llm = QPushButton("Load LLM", self)
         self.btn_load_llm.setObjectName("toolbar_btn_load")
         self.btn_load_llm.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_load_llm.setToolTip(
-            "Loads selected LLM with the selected prompt/config (before sending request)"
-        )
+        self.btn_load_llm.setToolTip("Loads selected LLM with the selected prompt/config (before sending request)")
         self.addWidget(self.btn_load_llm)
 
         # Indicateur d'état LLM (LED rouge/vert)
@@ -382,9 +374,7 @@ class Toolbar(QToolBar):
                     # Ajouter base prompt au submenu
                     base_action = QAction(name, submenu)
                     base_action.setToolTip(_html(descr))
-                    base_action.triggered.connect(
-                        functools.partial(self._prompt_action_triggered, name)
-                    )
+                    base_action.triggered.connect(functools.partial(self._prompt_action_triggered, name))
                     submenu.addAction(base_action)
                     self._prompt_flat_actions.append(base_action)
 
@@ -392,9 +382,7 @@ class Toolbar(QToolBar):
                     for child_name, child_descr in children:
                         child_action = QAction(child_name, submenu)
                         child_action.setToolTip(_html(child_descr))
-                        child_action.triggered.connect(
-                            functools.partial(self._prompt_action_triggered, child_name)
-                        )
+                        child_action.triggered.connect(functools.partial(self._prompt_action_triggered, child_name))
                         submenu.addAction(child_action)
                         self._prompt_flat_actions.append(child_action)
 
@@ -406,9 +394,7 @@ class Toolbar(QToolBar):
                     # Base prompt sans children - ajouter directement à main menu
                     base_action = QAction(name, self.prompt_menu)
                     base_action.setToolTip(_html(descr))
-                    base_action.triggered.connect(
-                        functools.partial(self._prompt_action_triggered, name)
-                    )
+                    base_action.triggered.connect(functools.partial(self._prompt_action_triggered, name))
                     self.prompt_menu.addAction(base_action)
                     self._prompt_flat_actions.append(base_action)
 
@@ -424,9 +410,7 @@ class Toolbar(QToolBar):
                 for child_name, child_descr in children:
                     child_action = QAction(child_name, submenu)
                     child_action.setToolTip(_html(child_descr))
-                    child_action.triggered.connect(
-                        functools.partial(self._prompt_action_triggered, child_name)
-                    )
+                    child_action.triggered.connect(functools.partial(self._prompt_action_triggered, child_name))
                     submenu.addAction(child_action)
                     self._prompt_flat_actions.append(child_action)
 
@@ -438,9 +422,7 @@ class Toolbar(QToolBar):
         # Ajouter le séparateur et l'action "New Role"
         self.prompt_menu.addSeparator()
         new_prompt_action = QAction("+ New Role", self.prompt_menu)
-        new_prompt_action.setToolTip(
-            "Create a new role/system prompt/parameters default configuration"
-        )
+        new_prompt_action.setToolTip("Create a new role/system prompt/parameters default configuration")
         new_prompt_action.triggered.connect(self._ask_for_new_prompt)
         self.prompt_menu.addAction(new_prompt_action)
 
@@ -467,9 +449,7 @@ class Toolbar(QToolBar):
             def _switch_language(checked, code=lang_code):
                 if not checked or code == self.current_language:
                     return
-                saved_index = (
-                    self._current_prompt_index if hasattr(self, "_current_prompt_index") else -1
-                )
+                saved_index = self._current_prompt_index if hasattr(self, "_current_prompt_index") else -1
                 # recharger le PromptConfigManager avec la nouvelle langue
                 self.prompt_config_manager.load_language(code)
                 self.current_language = code
@@ -687,9 +667,7 @@ class Toolbar(QToolBar):
                 continue
             llm_size = self.convert_bytes_to_gb(model["size"])
             llm_name = model["name"]
-            tooltip_text = (
-                f"LLM: {llm_name}\n" f"Size: {llm_size}\n" f"Family: {model['details']['family']}"
-            )
+            tooltip_text = f"LLM: {llm_name}\n" f"Size: {llm_size}\n" f"Family: {model['details']['family']}"
             self.llm_combo.addItem(llm_name)
             index = self.llm_combo.count() - 1
             self.llm_combo.setItemData(index, tooltip_text, Qt.ItemDataRole.ToolTipRole)

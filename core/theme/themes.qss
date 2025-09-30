@@ -17,7 +17,7 @@ QSplitter#main_splitters::handle {
     x1: 0,
     y1: 0,
     x2: 1,
-    y2: 0.9,
+    y2: 1,
     stop: 0 /*Warning*/,
     stop: 1 /*Danger*/);
   height: 6px;
@@ -30,17 +30,28 @@ QSplitter#in_chat_splitter::handle:vertical {
   background-color: qlineargradient(
     x1: 0,
     y1: 0,
-    x2: 0.8,
-    y2: 0.7,
-    stop: 1 /*Warning*/,
-    stop: 0 /*Danger*/);
+    x2: 0.9,
+    y2: 0.9,
+    stop: 0 /*Warning*/,
+    stop: 1 /*Danger*/);
   margin: 0px;
-  height: 6px;
+  height: 8px;
   /* border-radius: 2px; */
   /* margin-left: 65px;
   margin-right: 65px; */
 }
 
+/* aperçu des barres de séparation */
+QSplitter#main_left::handle {
+  background-color: qlineargradient(
+    x1: 0,
+    y1: 0,
+    x2: 1,
+    y2: 1,
+    stop: 0 /*Danger*/,
+    stop: 1 /*Warning*/);
+  height: 6px;
+}
 
 /* apercu des scrollbar */
 QScrollBar:vertical {
@@ -56,8 +67,8 @@ QScrollBar:vertical {
     y1: 0,
     x2: 1,
     y2: 1,
-    stop: 1 /*Warning*/,
-    stop: 0 /*Danger*/);
+    stop: 1 /*Danger*/,
+    stop: 0 /*Warning*/);
   width: 5px;
   border-radius: 16px;
 }
@@ -82,8 +93,8 @@ QScrollBar::handle:vertical {
     y1: 0,
     x2: 1,
     y2: 1,
-    stop: 0 /*Danger*/,
-    stop: 1 /*Warning*/);
+    stop: 1 /*Danger*/,
+    stop: 0 /*Warning*/);
   border-radius: 12px; 
   min-height: 60px;
 }
@@ -104,6 +115,7 @@ QScrollArea > QWidget {
   margin: 0px;
   padding: 0px;
 }
+
 /* ======== CURSEURS ET SELECTIONS ===== */
 
 /* ======== MAIN WINDOW ========= */
@@ -191,17 +203,10 @@ QToolTip {
  QComboBox = menu LLM & prompt */
 /* items menu déroulant Thèmes */
 
-
 QMenu#themesMenu{
   background: none;
   outline: none;
   border: none;
-}
-
-QMenu#themesMenu QMenu[active="true"] {
-  /* outline-color: #61afef; */
-  /* color: #61afef; */
-  /* outline-radius: 6px; */
 }
 
 /* spacer1 */
@@ -575,6 +580,11 @@ QListWidget#session_list QWidget#sessionRows QToolTip,
 }
 
 /* - Boutons édit / suppr -- */
+
+QLineEdit#session_name_edit {
+  color: /*Text*/;
+  min-width: 250px;
+}
 
 /* QToolButton#btnEditSession,
 QToolButton#btnEditFolder, */
@@ -1233,7 +1243,8 @@ QPushButton#context_btn_refresh:hover {
 }
 
 
-/* ======= CONTEXT Config Edit QDialog (texte + 3 boutons) ====== */
+/* ======= CONTEXT QDialog Config Edit (texte + 3 boutons) ====== */
+/* ======= CONTEXT QDialog Validation Edit (texte + 2 boutons) ====== */
 
 QTabWidget {
     /* style global du widget onglet */
@@ -1283,8 +1294,10 @@ QTabBar::tab:disabled {
 }
 
 /* le panneau d'edition de la config */
-QDialog#config_edit QTextEdit#config_tab_text_ed {
+QDialog#config_edit QTextEdit#config_tab_text_ed,
+QDialog#validation_dialog QTextEdit#validation_editor {
   border:none;
+  outline:none;
   background: /*Base*/;
   color: /*Text*/;
   font-size: 16px;
@@ -1320,15 +1333,15 @@ QLabel#config_tab_name {
 
 QWidget#ConfigFormContainer QLineEdit#config_tab_name_ed {
   /* border: none; */
-  border: 2px solid /*Base*/;
+  border: 2px solid /*Warning*/;
   color: /*Text*/;
-  /* background: transparent; */
+  background: /*Base*/;
   padding: 2px;
   font-size: 14px;
 }
 
 QWidget#ConfigFormContainer {
-  /* border: none; */
+  border: none;
   background: transparent;
 }
 
@@ -1342,6 +1355,49 @@ QDialogButtonBox#config_edit_btn QPushButton#config_edit_btn_RestoreDefaults:hov
   border: 2px solid /*Text*/;
 }
 
+/* Boite de Dialogue et boutons de boite de dialogue */
+
+QDialog#config_edit {
+  outline: none;
+  background-color: /*Base1*/;
+  color: /*Text*/;
+}
+
+QDialog#config_edit QPushButton,
+QDialog#validation_dialog QPushButton {
+  /* boutons dans les QDialog */
+  border: /*Warning*/;
+  border-radius: 6px;
+  padding: 5px 10px;
+}
+
+QDialog#config_edit QPushButton:pressed {
+  background-color: /*Accent*/;
+}
+
+/*les boutons par leur texte */
+QDialog QPushButton[text="OK"],
+QDialog QPushButton[text="Save"] {
+  background-color: /*Warning*/;
+  color: /*Text2*/;
+} 
+QDialog QPushButton[text="Cancel"] {
+  background: /*Danger*/;
+  color: /*Text2*/;
+}
+
+QDialog QLabel {
+  color: /*Text*/;
+}
+
+QDialog QLineEdit {
+  color: /*Text*/;
+  outline : none;
+  border: 1px solid /*Text1*/;
+  padding: 4px 4px;
+  min-width: 250px;
+  margin: 4px;
+}
 /* ======== CONFIG PANEL ========= */
 QLabel#sys_prt_lbl {
   font-size: 15px;
@@ -1459,7 +1515,6 @@ QComboBox#config_KV_Cache {
   font-size: 14px;
   margin-top: 20px;
   padding:4px 0px 6px 0px;
-  opacity: 0.1;
 }
 
 #config_btn_save:hover {
@@ -1528,38 +1583,6 @@ QLabel#titles {
 }
 
 
-/* Boite de Dialogue et boutons de boite de dialogue */
-
-QDialog#config_edit {
-  outline: none;
-  background-color: /*Base1*/;
-  color: /*Text*/;
-}
-
-QDialog#config_edit QPushButton {
-  /* boutons dans les QDialog */
-  border: /*Warning*/;
-  border-radius: 6px;
-  padding: 5px 10px;
-}
-
-QDialog#config_edit QPushButton:pressed {
-  background-color: /*Accent*/;
-}
-
-/*les boutons par leur texte */
-QDialog QPushButton[text="OK"] {
-  background-color: /*Warning*/;
-  color: /*Text2*/;
-} 
-QDialog QPushButton[text="Cancel"] {
-  background: /*Danger*/;
-  color: /*Text2*/;
-}
-
-QDialog QPushButton:hover {
-  color: /*Accent*/;
-}
 
 /* ========== SEARCH DIALOG ========== */
 

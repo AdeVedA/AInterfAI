@@ -41,9 +41,7 @@ class QdrantLauncher:
         """Launches Qdrant if not already active on host:grpc_port."""
 
         if not self.exe_path.exists() or not Path(self.exe_path).is_file():
-            print(
-                "QDRANT EXE not found, RAG disabled.\nplease install Qdrant and put its path in .env file"
-            )
+            print("QDRANT EXE not found, RAG disabled.\nplease install Qdrant and put its path in .env file")
             return
         if not self.config_yaml.exists():
             print(f"config.yaml not found : {self.config_yaml}")
@@ -83,9 +81,7 @@ class QdrantLauncher:
                     pass
                 # Sinon, on vérifie juste que le port TCP est ouvert
                 if is_qdrant_running(self.host, self.grpc_port):
-                    print(
-                        f"✅ Qdrant replied TCP on {self.host}:{self.grpc_port} after {i*0.5:.1f}s"
-                    )
+                    print(f"✅ Qdrant replied TCP on {self.host}:{self.grpc_port} after {i*0.5:.1f}s")
                     return
                 time.sleep(0.5)
 

@@ -29,7 +29,9 @@ class Folder(Base):
     __tablename__ = "folder"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, index=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
+    )
     parent_id = Column(Integer, ForeignKey("folder.id"), nullable=True)
     parent = relationship("Folder", remote_side=[id], backref="children")
     sessions = relationship("Session", back_populates="folder", cascade="all, delete-orphan")
@@ -44,7 +46,14 @@ class Session(Base):
     __tablename__ = "session"
     id = Column(Integer, primary_key=True)
     session_name = Column(String, nullable=False, index=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False)
+    # created_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default="CURRENT_TIMESTAMP",  # SQLite crée l’UTC à l’insertion
+        default=datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )
     folder_id = Column(Integer, ForeignKey("folder.id"), nullable=True)
 
     folder = relationship("Folder", back_populates="sessions")
