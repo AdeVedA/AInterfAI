@@ -172,9 +172,11 @@ A modular system for enriching prompts with your documents (document-based knowl
 
 <h2 id="installation" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⚙️ Installation</h2>
 
-### 0. Install [Python 3.13+](https://www.python.org/downloads/) (earlier versions may work… I just haven’t tested them!)
+### 0. Install [Python 3.13+](https://www.python.org/downloads/) (earlier versions may work… I just haven’t tested them!) and [git](https://git-scm.com/downloads)
 
 → [https://www.python.org/downloads/](https://www.python.org/downloads/)
+
+→ [https://git-scm.com/downloads](https://git-scm.com/downloads)
 
 ### 1. Retrieve the software
 
