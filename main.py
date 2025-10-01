@@ -38,11 +38,16 @@ def handle_exception(exc_type, exc_value, exc_tb):
 def _ensure_embedding_model(llm_manager):
     embedding_model = "nomic-embed-text:latest"
     if not llm_manager.is_model_in_ollama(embedding_model):
-        print(f"\n⚠️  Embedding model '{embedding_model}' is not present on the Ollama server.")
+        print(
+            f"\n⚠️  Embedding model '{embedding_model}' is not present on the Ollama server."
+            "\nThis model is needed for Retrieval-Augmented-Generation (useful feature to be able to find "
+            "relevant knowledge/chunks in the context files you choose and to inject it in your LLM request)"
+            "\nYou'll only have to download it once and for all.\n"
+        )
         answer = input(
             "\nDo you want to download it now (≈ 274 MiB)?\n"
             " 1 -> Yes, download now\n"
-            " 2 -> No, continue without\n"
+            " 2 -> No, continue without (no RAG in app)\n"
             "Your choice: "
         ).strip()
         if answer == "1":
