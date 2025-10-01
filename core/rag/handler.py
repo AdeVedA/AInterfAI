@@ -5,14 +5,7 @@ from typing import Dict, List
 from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import (
-    Distance,
-    FieldCondition,
-    Filter,
-    MatchValue,
-    PointStruct,
-    VectorParams,
-)
+from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, VectorParams
 from qdrant_client.models import MatchAny
 
 from core.rag.config import RAGConfig
@@ -30,10 +23,15 @@ class RAGHandler:
         self._ctx_parser = ctx_parser
 
         # Embeddings
-        self.embedder = OllamaEmbeddings(model=self.config.embedding_model)
-        print(
-            f"Embedding model for vectorization : {self.embedder} with {self.config.embedding_dimensions} dimensions"
-        )
+        try:
+            self.embedder = OllamaEmbeddings(model=self.config.embedding_model, validate_model_on_init=True)
+        except ValueError as e:
+            print(
+                "\nDid you download the 'nomic-embed-text:latest' embedding model ?\n"
+                f"\nThe embedder is not able to be launched : {e}\n"
+            )
+            return
+        print(f"Embedding model for vectorization : {self.embedder} with {self.config.embedding_dimensions} dimensions")
         # Connexion à Qdrant
         self.qdrant_client = QdrantClient(
             host=self.config.qdrant_host,
@@ -182,9 +180,7 @@ class RAGHandler:
                 points_selector=Filter(
                     must=[
                         FieldCondition(key="session_id", match=MatchValue(value=self.session_id)),
-                        FieldCondition(
-                            key="path", match=MatchValue(value=str(fpath).replace("\\", "/"))
-                        ),
+                        FieldCondition(key="path", match=MatchValue(value=str(fpath).replace("\\", "/"))),
                     ]
                 ),
             )
@@ -231,9 +227,7 @@ class RAGHandler:
 
         return results
 
-    def build_rag_prompt(
-        self, query: str, current_system_prompt: str, allowed_paths: list[str] | None = None
-    ) -> str:
+    def build_rag_prompt(self, query: str, current_system_prompt: str, allowed_paths: list[str] | None = None) -> str:
         """
         Build the complete RAG prompt to send to the LLM.
         """

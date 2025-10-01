@@ -35,6 +35,27 @@ def handle_exception(exc_type, exc_value, exc_tb):
     sys.stderr.flush()
 
 
+def _ensure_embedding_model(llm_manager):
+    embedding_model = "nomic-embed-text:latest"
+    if not llm_manager.is_model_in_ollama(embedding_model):
+        print(f"\n⚠️  Embedding model '{embedding_model}' is not present on the Ollama server.")
+        answer = input(
+            "\nDo you want to download it now (≈ 274 MiB)?\n"
+            " 1 -> Yes, download now\n"
+            " 2 -> No, continue without\n"
+            "Your choice: "
+        ).strip()
+        if answer == "1":
+            try:
+                print(f"\n⤵  Downloading '{embedding_model}'...\n")
+                llm_manager.pull_model(embedding_model)
+            except RuntimeError as err:
+                print(f"\n❌  Download failed: {err}")
+                sys.exit(1)
+        else:
+            print("\n⚠️  Proceeding without the embedding model; RAG features will be disabled.\n")
+
+
 def main():
     faulthandler.enable(all_threads=True, file=sys.stderr)
 
@@ -42,7 +63,7 @@ def main():
     BASE_DIR = Path(__file__).resolve().parent
     # variables d'environnement
     QDRANT_EXE = os.getenv("QDRANT_ENGINE_PATH", "")
-    if not QDRANT_EXE:
+    if not QDRANT_EXE or not Path(QDRANT_EXE).exists() or not Path(QDRANT_EXE).is_file():
         from utils.env_tools import ensure_qdrant_path
 
         dotenv_file = BASE_DIR / ".env"
@@ -67,6 +88,7 @@ def main():
 
     init_db()
 
+    # if Path(QDRANT_EXE).exists() and Path(QDRANT_EXE).is_file():
     # Charger Qdrant (BDD vectorielle)
     from utils.qdrant_launcher import QdrantLauncher
 
@@ -85,6 +107,9 @@ def main():
     config_manager = ConfigManager()
     session_manager = SessionManager()
     llm_manager = LLMManager(session_manager=session_manager)
+
+    _ensure_embedding_model(llm_manager)
+
     theme_manager = ThemeManager(app)
 
     # Importer après QApplication et managers pour alléger l'import initial

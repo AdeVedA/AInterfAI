@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import json
 import subprocess
+import sys
 import threading
 import time
-from typing import Optional
+from typing import Dict, Generator, Optional
 
 import requests
 from langchain_ollama.llms import OllamaLLM
@@ -48,7 +50,7 @@ class LLMManager:
         If the server is not reachable, it starts the server using the provided command.
         """
         try:
-            requests.get(self.ollama_host, timeout=1)
+            requests.get(self.ollama_host, timeout=3)
         except requests.exceptions.RequestException:
             subprocess.Popen(self.serve_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             time.sleep(2)
@@ -207,17 +209,6 @@ class LLMManager:
         """
         return sorted([llm["name"] for llm in llm_list])
 
-    def pull_model(self, model_name: str):
-        """
-        Pulls a specific model from the Ollama server if it's not already present.
-        Args:
-            model_name (str): The name of the model to pull.
-        """
-        self._ensure_server_running()
-        payload = {"model": model_name, "stream": False}
-        resp = requests.post(f"{self.ollama_host}/api/pull", json=payload)
-        resp.raise_for_status()
-
     def get_model_template(self, model_name: str) -> Optional[str]:
         """
         Recovers the model template for a specific model of the Olllama server.
@@ -240,3 +231,92 @@ class LLMManager:
         except KeyError:
             print("Unexpected response format")
             return None
+
+    # --- Methods for startup checking
+
+    def is_model_in_ollama(self, model_name: str) -> bool:
+        """verifies if a model_name is in the ollama currently loaded models
+        Args :
+            model_name[str] : the name of the model to indicate 'downloaded' state
+        Returns :
+            boolean : True if model loaded, else false
+        """
+        if not model_name:
+            return False
+        try:
+            result = subprocess.run(["ollama", "list"], capture_output=True, text=True, timeout=1.5)
+            # Recherche d'une ligne contenant le nom modèle exact (peut adapter selon le format)
+            for line in result.stdout.splitlines():
+                if model_name.lower() in line.lower():
+                    return True
+            return False
+        except Exception as e:
+            print(f"Error in is_model_in_ollama: {e}")
+            return False
+
+    # def pull_model(self, model_name: str):
+    #     """
+    #     Pulls a specific model from the Ollama server if it's not already present.
+    #     Args:
+    #         model_name (str): The name of the model to pull.
+    #     """
+    #     self._ensure_server_running()
+    #     payload = {"model": model_name, "stream": False}
+    #     resp = requests.post(f"{self.ollama_host}/api/pull", json=payload)
+    #     resp.raise_for_status()
+
+    def _stream_pull(self, model_name: str) -> Generator[Dict, None, None]:
+        """Call Ollama pull API with stream=True and yield JSON lines."""
+        self._ensure_server_running()
+        payload = {"model": model_name, "stream": True}
+        with requests.post(f"{self.ollama_host}/api/pull", json=payload, stream=True) as r:
+            r.raise_for_status()
+            for raw_line in r.iter_lines(decode_unicode=True):
+                if not raw_line:
+                    continue
+                try:
+                    yield json.loads(raw_line)
+                except json.JSONDecodeError:
+                    continue
+
+    def pull_model(self, model_name: str) -> None:
+        """
+        Download a model from Ollama while displaying a text progress bar.
+        Raises RuntimeError on failure.
+        """
+        try:
+            for chunk in self._stream_pull(model_name):
+                if "error" in chunk:
+                    raise RuntimeError(f"Ollama error: {chunk['error']}")
+
+                status = chunk.get("status", "")
+                total = chunk.get("total")
+                completed = chunk.get("completed")
+
+                if total is not None and completed is not None:
+                    pct = (completed / total) * 100 if total else 0
+                    bar_width = 30
+                    filled = int(bar_width * pct / 100)
+                    bar = "=" * filled + " " * (bar_width - filled)
+                    sys.stdout.write(
+                        f"\r{status:<15} [{bar}] {pct:5.1f}% " f"{_format_bytes(completed)}/{_format_bytes(total)}"
+                    )
+                    sys.stdout.flush()
+                else:
+                    sys.stdout.write(f"\r{status}...")
+                    sys.stdout.flush()
+                time.sleep(0.02)
+
+            sys.stdout.write("\n")
+            print(f"✅ Model '{model_name}' downloaded successfully.")
+        except Exception as exc:
+            raise RuntimeError(f"Failed to download model '{model_name}': {exc}") from exc
+
+
+def _format_bytes(num: int) -> str:
+    """Return a human-readable byte size."""
+    for unit in ("B", "KiB", "MiB", "GiB", "TiB"):
+        if abs(num) < 1024.0:
+            return f"{num:.2f} {unit}"
+        num /= 1024.0
+    return f"{num:.2f} PiB"
