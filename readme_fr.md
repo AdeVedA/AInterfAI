@@ -35,7 +35,21 @@ Une interface graphique locale pour LLM offrant chat avancé avec édition de me
 
 ---
 
-**AInterfAI** est une application de bureau conçue pour interagir avec des modèles de langage locaux (servis localement par [Ollama](https://ollama.com)) dans un environnement productif et permettant d'enrichir les requêtes avec votre contexte local. Construite avec PyQt6 et LangChain, elle supporte la gestion des sessions, la gestion de la configuration des LLM, la gestion des fichiers de contexte avec insertion complète de documents (Full) ou Retrieval-Augmented Generation (RAG) sur vos propres fichiers - le RAG utilise la base de données vectorielle [Qdrant](https://qdrant.tech).
+**AInterfAI** est une application de bureau conçue pour interagir avec des modèles de langage locaux (LLM servis localement par [Ollama](https://ollama.com)) dans un environnement productif et permettant d'enrichir les requêtes avec votre contexte local (documents ).
+
+Construite avec PyQt6 et LangChain, elle supporte la gestion des sessions, la gestion de la configuration des LLM, la gestion des fichiers de contexte avec insertion complète de vos documents (Full) dans vos requêtes ou Retrieval-Augmented Generation (RAG) sur vos propres fichiers - le RAG utilise la base de données vectorielle [Qdrant](https://qdrant.tech).
+
+<div align="center"><font size="4">
+<strong>
+
+[⚙️ Installation (TL;DR)](#installation)
+
+<h6>----------------------</h6>
+Présentation
+
+</strong></font>
+
+</div>
 
 L'architecture sépare principalement deux couches :
 
@@ -49,7 +63,7 @@ Bien que ce pattern soit utile, il introduit des difficultés pour garder les co
 
 ---
 
-<h2 id="tech-stack" style="background: rgb(39, 76, 119); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⚙️ Stack Technique</h2>
+<h2 id="tech-stack">⚙️ Stack Technique</h2>
 
 -   **Ollama** (serveur LLM local avec API REST)
 -   **PyQt6** (framework GUI)
@@ -63,7 +77,7 @@ Bien que ce pattern soit utile, il introduit des difficultés pour garder les co
 -   **pygments** (coloration syntaxique)
 -   **Configs JSON** (paramètres généraux de l'UI, prompts/configs de prompts, filtres du parseur de contexte)
 
-<h2 id="features" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">🚀 Fonctionnalités</h2>
+<h2 id="features">🚀 Fonctionnalités</h2>
 
 ### 🧩 Général (Chat, Barre d'outils...)
 
@@ -78,21 +92,20 @@ Bien que ce pattern soit utile, il introduit des difficultés pour garder les co
 -   **comptage** local des **tokens** affiché à l'aide de `tiktoken` (session, requête utilisateur, panier des fichiers de contexte)
 -   Options pour :
 
-    -   Afficher et modifier la requête finale avant envoi au LLM (avec recherche ctrl+f aussi !)
-    -   Générer automatiquement un titre de session (si le nom de la session a sa forme par défaut) <br> -> Je vous recommande de désactiver cette option si vous avez de faibles ressources, ou si vous utilisez un gros LLM avec une longue session (économie d'énergie et de temps).
-    -   Définir le temps de « keep-alive » du LLM en mémoire
-    -   Définir l'intervalle entre chaque sondage sur la disponibilité du LLM
+    -   **Afficher et modifier la requête finale avant envoi** au LLM (avec recherche ctrl+f aussi dedans !)
+    -   **Générer** automatiquement un **titre** de session (si le nom de la session a sa forme par défaut) <br> -> Je vous recommande de désactiver cette option si vous avez de faibles ressources, ou si vous utilisez un gros LLM avec une longue session (économie d'énergie et de temps).
+    -   Définir le temps de **« keep-alive »** du LLM en mémoire
+    -   Définir l'intervalle entre chaque sondage sur la **disponibilité** du LLM
 
 ### 🗂️ Gestion des Sessions
 
 -   Multiples sessions de chat avec stockage persistant
 -   **Filtrage** par date (avec vos dossiers), type de Prompt (Rôle) ou LLM
 -   Organisation par **dossiers** (et dossiers "factices" pour le filtrage des sessions par LLM ou Prompt/Rôle)
--   Glisser-déposer les sessions entre dossiers
+-   Glisser-déposer les sessions entre dossiers (avec auto-ouverture des dossiers cibles lors du dépôt)
 -   Ouvrir / fermer un dossier
 -   Créer automatiquement un dossier de session lorsqu'on dépose une session sur une autre session
 -   **Renommer** (double-clic sur le nom de la session/dossier) et **supprimer** les sessions ou dossiers avec l'icône "corbeille"
--   Auto-déploiement des dossiers cibles lors du dépôt
 -   **Infobulle** de session (avec le dernier LLM utilisé, type de prompt/rôle, date...)
 -   **Exporter en markdown** une session entière (tous les messages du chat) stylisée avec le thème actif, sauvegardée dans un fichier nommé {nom_de_session}.md
 -   Exporter en html (wip...)
@@ -103,18 +116,19 @@ Un système modulaire pour enrichir les prompts avec vos documents (connaissance
 
 -   **Modes de Contexte**
 
-    -   `OFF` : Aucun contexte externe
+    -   `OFF` : Aucun contexte externe (requête normale)
     -   `FULL CONTEXT` : Injecte le contenu complet parsé des fichiers sélectionnés
     -   `RAG` : vectorise & récupère les chunks sémantiquement pertinents (pour votre requête) des fichiers sélectionnés via Qdrant avec le modèle d'embedding
 
--   **Fonctionnalités RAG**
-
     -   Formats supportés : `.pdf`, `.epub`, `.docx`, `.pptx`, `.rtf`, `.txt`, `.md`, `.xml`, `.json`, etc.
+
+-   **Fonctionnalités FULL & RAG**
+
     -   Paramètres ajustables : `K extracts` (nombre de chunks récupérés) et `chunk size` (taille du chunk ≈ tokens par chunk).
     -   Modèle d'embedding utilisé par défaut : `nomic-embed-text:latest` (vous pouvez changer `embedding_model` dans `core/rag/config.py` pour l'instant)
     -   Rafraîchir l'index (utile après mise à jour des fichiers source)
     -   Vectorisation et indexation par fichier ou paquet de fichiers
-    -   Utilisation du RAG :
+    -   **Utilisation du RAG** :
         -   sélectionner vos fichiers,
         -   cliquer sur **Context vectorization**,
         -   (sélectionner et) charger un LLM avec un rôle/Prompt pertinent (RAG... ou créez le vôtre),
@@ -122,7 +136,7 @@ Un système modulaire pour enrichir les prompts avec vos documents (connaissance
 
 -   **Parsing de Contexte Multi-Config**
 
-    -   Configurations nommées et définies par l'utilisateur stockées dans `context_parser_config.json` pour la configuration du parsing d'arborescence de fichiers
+    -   Configurations persistantes et personnalisables du parsing d'arborescence de fichiers (inclusion/exclusions/gitignore/repertoires)nommées et définies par l'utilisateur stockées dans `context_parser_config.json`.
     -   Interface d'édition des configurations à onglets
     -   Contrôle précis des extensions de fichiers, motifs d'inclusion/exclusion avec wildcards et exclusions optionnelles `.gitignore`, nombre maximal d'enregistrements d'historique de dossiers locaux...
 
@@ -137,21 +151,21 @@ Un système modulaire pour enrichir les prompts avec vos documents (connaissance
 
 -   **Configurations de prompts par défaut (français ou anglais)**
 
-    -   Les nombreux modèles de rôle/prompts fournis permettent de définir rapidement un rôle/prompt système pour vos LLM.
-    -   Toute modification de la combinaison LLM + rôle/prompt système et ses paramètres associés peut être sauvegardée.
-    -   Vous pouvez créer de nouveaux prompts en cliquant sur « + New Role ». Si plusieurs rôles ou prompts système partagent le même premier mot suivi d’un espace, ils seront affichés/regroupés dans un sous‑menu correspondant à ce mot.
-    -   Les rôles/prompts par défaut sont chargés avec un choix de langue (français ou anglais) et organisés en dossiers selon le premier mot de leurs noms. Vous pouvez donc vous organiser comme vous le souhaitez : utilisez « + New Role » dans l’application ou éditez simplement le fichier core/prompt_config_defaults_fr.json.
+    -   Les **nombreux modèles de rôle/prompts fournis** permettent de définir rapidement un rôle/prompt système pertinent pour vos LLM.
+    -   Toute **modification de la combinaison LLM + rôle/prompt système** et ses paramètres associés peut être **sauvegardée**.
+    -   Vous pouvez **créer de nouveaux prompts** en cliquant sur « + New Role ». Si plusieurs rôles ou prompts système partagent le même premier mot suivi d’un espace, ils seront affichés/regroupés dans un sous‑menu correspondant à ce mot.
+    -   Les rôles/prompts par défaut sont chargés avec un **choix de langue (français ou anglais)** et organisés en dossiers selon le premier mot de leurs noms. Vous pouvez donc vous organiser comme vous le souhaitez : utilisez « + New Role » dans l’application ou éditez simplement le fichier core/prompt_config_defaults_fr.json.
     -   Lors du changement de langue (français/anglais), le programme tente de trouver et de charger le prompt équivalent dans l’autre langue (par index)
 
 -   **Propriétés du LLM**
 
-    -   Analyse des paramètres par défaut du LLM via l'API locale d'Ollama
-    -   Indication des paramètres par défaut (le cas échéant) sur les curseurs UI
+    -   Récupération des paramètres par défaut du LLM via l'API locale d'Ollama
+    -   Indication des paramètres par défaut (le cas échéant) sur les curseurs du panneau UI de configuration
 
 -   **Configurations Rôle/Prompt & LLM**
 
     -   Enregistrer/Charger : ensembles Prompt/rôle + paramètres LLM
-    -   Paramètres éditables (et hyper-paramètres) :
+    -   **Paramètres éditables** (et hyper-paramètres) :
         -   prompt système
         -   temperature, top_k, repeat_penalty, top_p, min_p
         -   max tokens (avec limitation du modèle intégrée)
@@ -170,9 +184,9 @@ Un système modulaire pour enrichir les prompts avec vos documents (connaissance
 
 ---
 
-<h2 id="installation" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⚙️ Installation</h2>
+<h2 id="installation">⚙️ Installation</h2>
 
-### 0. Installer [Python 3.13+](https://www.python.org/downloads/) (des versions antérieures pourraient fonctionner... je n'ai simplement pas testé !) et [git](https://git-scm.com/downloads)
+### 0. Installer [Python 3.13+](https://www.python.org/downloads/) _des versions antérieures pourraient fonctionner... je n'ai simplement pas testé !_ et [git](https://git-scm.com/downloads)
 
 → [https://www.python.org/downloads/](https://www.python.org/downloads/)
 
@@ -225,7 +239,12 @@ pip install -r requirements.txt
 
 → [https://ollama.com/download](https://ollama.com/download)
 
-Une fois installé :
+installez-le. Redémarrez si demandé. Une fois installé :
+
+### 5. Télécharger un LLM et un embedding
+
+→ [https://ollama.com/search](https://ollama.com/search)
+Sur cette page, trouvez un modèle LLM dont la taille est de maximum 3/4 de votre VRAM+RAM (GB), cliquez sur son nom et copiez la commande à exécuter en terminal. Testez une fois en terminal avec une requête (après avoir fait un ollama run {nom_du_model_choisi}) comme ca vous êtes sûr que ca fonctionne côté serveur ollama.
 
 **A.** Téléchargez votre premier modèle (voir la section _Recommended Ollama Models_ si vous êtes perdu, ici on montre comment télécharger `mistral-small3.2:24b`) :
 
@@ -234,6 +253,7 @@ ollama pull mistral-small3.2:24b
 ```
 
 Vous pouvez utiliser n'importe quel modèle local compatible avec Ollama (`mistral`, `qwen3`, `gemma3`, `gpt-oss`, etc.).
+Si vous avez très peu de ressources (RAM & VRAM), prenez un gemma3n:e4b, ou plus petit (mistral:7b, deepseek-r1:latest)
 
 **B.** Téléchargez le modèle d'embedding `"nomic-embed-text:latest"` (le RAG ne sera pas possible sans lui) :
 
@@ -241,17 +261,17 @@ Vous pouvez utiliser n'importe quel modèle local compatible avec Ollama (`mistr
 ollama pull nomic-embed-text:latest
 ```
 
-### 5. Installer [Qdrant](https://github.com/qdrant/qdrant/releases)
+### 6. Installer [Qdrant](https://github.com/qdrant/qdrant/releases)
 
 → [https://github.com/qdrant/qdrant/releases](https://github.com/qdrant/qdrant/releases)
 
-Téléchargez le fichier correspondant à votre os, décompressez et mettez le fichier qdrant (binary) dans un dossier de votre choix. Vous **devez** alors indiquer le chemin vers `qdrant.exe` (Windows ex.: C:\BDD\Qdrant\qdrant.exe) ou `qdrant` (mac/linux ex: C:/BDD/Qdrant/qdrant) dans le fichier `.env` à la racine du projet (ouvrez -le avec un editeur de texte, insérez le bon chemin et sauvegardez).
+Téléchargez le fichier correspondant à votre os, décompressez/ouvrez l'archive et mettez le fichier qdrant (binary) dans un dossier de votre choix. Vous **devez** alors indiquer le chemin vers `qdrant.exe` (Windows ex.: C:\BDD\Qdrant\qdrant.exe) ou `qdrant` (mac/linux ex: C:/BDD/Qdrant/qdrant) dans le fichier `.env` à la racine du projet (ouvrez -le avec un editeur de texte, insérez le bon chemin et sauvegardez).
 Sinon, autre possibilité, le programme vous demandera le chemin vers qdrant au premier lancement du programme et l'inscrira dans le .env automatiquement.
 Vous pouvez aussi personnaliser le fichier de configuration Qdrant `config.yaml` dans le dossier `project_root\utils` si vous savez ce que vous faites.
 
 AInterfAI pourra alors lancer Qdrant automatiquement au démarrage.
 
-### 6. Lancer AInterfAI
+### 7. Lancer AInterfAI
 
 ```bash
 python main.py
@@ -260,7 +280,7 @@ python main.py
 Lors du premier lancement, le programme interrogera, via des requêtes _locales_ à l'API REST d'Ollama (`api/tags` & `api/show`), les informations des modèles afin de les enregistrer en base et de fournir des indications sur les hyper-paramètres et propriétés recommandés pour chaque LLM au sein du Modelfile d'Ollama et les préférer à ceux associés aux rôles/prompts par défaut (qui sont agnostiques du LLM).
 Si besoin, vous pouvez modifier le délai (`sync_time: timedelta = timedelta(days=30)`) entre chaque parsing des propriétés LLM dans `core\llm_properties.py` (si vous mettez à jour les Modelfile souvent).
 
-### 7. Lancement facile (pour un démarrage automatisé)
+### 8. Lancement facile (pour un démarrage automatisé)
 
 #### A. Windows
 
@@ -308,6 +328,7 @@ Les réponses les plus rapides proviennent de LLM entièrement chargés dans la 
 | ---------------------- | ---------------------------------- | ---------------------------------------------------- |
 | `gemma3n:e4b`          | pour CPU bas de gamme (>12 GB RAM) | MOE, léger et très rapide                            |
 | `phi4:14b`             | ~8 GB VRAM + ~8 GB RAM             | Dense, léger et assez rapide                         |
+| `gpt-oss:20b`          | ~6 GB VRAM + ~12 GB RAM            | MOE, rapide, performant                              |
 | `qwen3:30b-a3b`        | ~8 GB VRAM + ~16 GB RAM            | MOE, rapide, performant                              |
 | `qwen3:30b`            | ~8 GB VRAM + ~16 GB RAM            | Dense, rapide, performant                            |
 | `gemma3:27b-it-qat`    | ~12 GB VRAM + ~16 GB RAM           | Dense, bon compromis, quantification optimisée (qat) |
@@ -318,6 +339,7 @@ Les réponses les plus rapides proviennent de LLM entièrement chargés dans la 
 
 | Modèle                | VRAM / RAM min           | Remarques                                            |
 | --------------------- | ------------------------ | ---------------------------------------------------- |
+| `gpt-oss:20b`         | ~6 GB VRAM + ~12 GB RAM  | MOE, rapide, performant                              |
 | `qwen3-coder:30b-a3b` | ~8 GB VRAM + ~16 GB RAM  | MOE, rapide, performant                              |
 | `gemma3:27b-it-qat`   | ~12 GB VRAM + ~16 GB RAM | Dense, bon compromis, quantification optimisée (qat) |
 | `qwen3-coder:30b`     | ~8 GB VRAM + ~16 GB RAM  | Dense, encore plus performant                        |
@@ -329,7 +351,7 @@ _Note pour les débutants :_ les LLM MOE (Mixture-Of-Experts) sont plus rapide
 
 ---
 
-<h2 id="keyboard-shortcuts" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⌨️ Raccourcis Clavier</h2>
+<h2 id="keyboard-shortcuts">⌨️ Raccourcis Clavier</h2>
 
 | Raccourci                  | Contexte                                                                                                                                                                                                                   |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -344,7 +366,7 @@ _Note pour les débutants :_ les LLM MOE (Mixture-Of-Experts) sont plus rapide
 
 ---
 
-<h2 id="file-structure" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">🗂️ Arborescence du Projet</h2>
+<h2 id="file-structure">🗂️ Arborescence du Projet</h2>
 
 ```
 project_root/
@@ -426,7 +448,7 @@ project_root/
 
 ---
 
-<h2 id="license" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">📜 Licence</h2>
+<h2 id="license">📜 Licence</h2>
 
 Ce projet est distribué sous licence GPL v3. Voir le fichier [LICENSE](https://github.com/python-qt-tools/PyQt6-stubs/blob/main/LICENSE) pour plus de détails.
 
