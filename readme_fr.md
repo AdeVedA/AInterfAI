@@ -43,26 +43,20 @@ Construite avec PyQt6 et LangChain, elle supporte la gestion des sessions, la ge
 <strong>
 <h6>----------------------</h6>
 
-<h4>(TL;DR) trop long, pas le temps de lire</h4>
+<h2>(TL;DR) trop long, pas le temps de lire</h2>
 
 [⚙️ Installation](#installation)
 
 USAGE :
 
-1 - cliquez sur "+ session" (**créer une session**)
-
-2 - **choisir** un **Role**, un **LLM** (règlages éventuels)
-
-3 - cliquez sur **Load LLM**
-
-(3) - si mode de contexte "Full" - choisir au moins un fichier
-
+1 - cliquez sur "+ session" (**créer une session**)<br>
+2 - **choisir** un **Role**, un **LLM** (règlages éventuels)<br>
+3 - cliquez sur **Load LLM**<br>
+(3) - si mode de contexte "Full" - choisir au moins un fichier<br>
 (3) - si mode de contexte "RAG" - choisir au moins un fichier
-(réglages éventuels de du nombre d'extraits K et de leur taille) et cliquez sur "Context vectorization"
-
-4 - écrivez votre prompt. une fois terminé, cliquez sur **ctrl+entrée**
-
-5 - validez votre requête avec **ctrl+entrée**...
+(réglages éventuels de du nombre d'extraits K et de leur taille) et cliquez sur "Context vectorization"<br>
+4 - écrivez votre prompt. une fois terminé, cliquez sur **ctrl+entrée**<br>
+5 - validez votre requête avec **ctrl+entrée**...<br>
 
 <h6>----------------------</h6>
 Présentation
