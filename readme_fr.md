@@ -3,6 +3,13 @@
 </p>
 
 <h1 align="center"><font size="7">AInterfAI</font></h1>
+
+<h2 align="center"><font size="6">
+  <p>
+    <a href="./readme.md">English</a> |
+    <b>Français</b>
+  </p>
+</font></h2>
 <p align="center"><font size="4"><em>
 Une interface graphique locale pour LLM offrant chat avancé avec édition de messages et de requêtes finales, configurations diverses, injection de contexte et RAG <br>- codé avec/pour PyQt6, LangChain, Qdrant & Ollama -
 </em></font></p>
@@ -11,13 +18,6 @@ Une interface graphique locale pour LLM offrant chat avancé avec édition de me
   <img src="assets/session_chat.gif" width="410" alt="AInterfAI UI Screenshot">
   <img src="assets/session_coder.gif" width="410" alt="AInterfAI UI Screenshot2">
 </p>
-
-<h4 align="center"><font size="5">
-  <p>
-    <a href="./readme.md">English</a> |
-    <b>Français</b>
-  </p>
-</font></h4>
 
 <div align="center"><font size="4">
 <strong>
@@ -41,8 +41,19 @@ Construite avec PyQt6 et LangChain, elle supporte la gestion des sessions, la ge
 
 <div align="center"><font size="4">
 <strong>
+<h6>----------------------</h6>
+(TL;DR) trop long, pas le temps de lire
 
-[⚙️ Installation (TL;DR)](#installation)
+[⚙️ Installation](#installation)
+USAGE :
+1 - cliquez sur "+ session" (**créer une session**)
+2 - **choisir** un **Role**, un **LLM** (règlages éventuels)
+3 - cliquez sur **Load LLM**
+(3) - si mode de contexte "Full" - choisir au moins un fichier
+(3) - si mode de contexte "RAG" - choisir au moins un fichier
+(réglages éventuels de du nombre d'extraits K et de leur taille) et cliquez sur "Context vectorization"
+4 - écrivez votre prompt. une fois terminé, cliquez sur **ctrl+entrée**
+5 - validez votre requête avec **ctrl+entrée**...
 
 <h6>----------------------</h6>
 Présentation
@@ -206,6 +217,7 @@ Créez un répertoire. vous pouvez l'appeler **AInterfAI** dans d:\chemin\vers\m
 
 ```bash
 md AInterfAI # ou `mkdir AInterfAI` sur Mac/Linux
+cd AInterfAI
 ```
 
 #### C - cloner le repo Github du projet dans ce répertoire
@@ -345,7 +357,6 @@ Les réponses les plus rapides proviennent de LLM entièrement chargés dans la 
 | `qwen3-coder:30b`     | ~8 GB VRAM + ~16 GB RAM  | Dense, encore plus performant                        |
 | `magistral:24b`       | ~8 GB VRAM + ~16 GB RAM  | Dense, très performant                               |
 | `gpt-oss:120b`        | ~16 GB VRAM + ~64 GB RAM | MOE, très grand, plus précis                         |
-| `GLM-4.5-Air-IQ4_XS`  | ~16 GB VRAM + ~64 GB RAM | MOE, très grand, plus précis mais plus lent          |
 
 _Note pour les débutants :_ les LLM MOE (Mixture-Of-Experts) sont plus rapides et moins gourmands en ressources que les LLM denses.
 

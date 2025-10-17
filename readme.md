@@ -3,6 +3,13 @@
 </p>
 
 <h1 align="center"><font size="7">AInterfAI</font></h1>
+
+<h2 align="center"><font size="6">
+  <p>
+    <b>English</b> |
+    <a href="./readme_fr.md">Français</a>
+  </p>
+</font></h2>
 <p align="center"><font size="4"><em>
 A local LLM GUI for advanced chat, context injection, and document-aware RAG <br>-- powered by PyQt6, LangChain, Qdrant & Ollama --
 </em></font></p>
@@ -11,13 +18,6 @@ A local LLM GUI for advanced chat, context injection, and document-aware RAG <br
   <img src="assets/session_chat.gif" width="410" alt="AInterfAI UI Screenshot">
   <img src="assets/session_coder.gif" width="410" alt="AInterfAI UI Screenshot2">
 </p>
-
-<h4 align="center"><font size="5">
-  <p>
-    <b>English</b> |
-    <a href="./readme_fr.md">Français</a>
-  </p>
-</font></h4>
 
 <div align="center"><font size="4">
 <strong>
@@ -37,6 +37,29 @@ A local LLM GUI for advanced chat, context injection, and document-aware RAG <br
 
 **AInterfAI** is a desktop application designed for interacting with local language models (locally served by [Ollama](https://ollama.com)) in a productive and context-aware environment. Built with PyQt6 and LangChain, it supports session management, LLM config management, context files management with full-document parsing or Retrieval-Augmented Generation (RAG) over your own files - powered by vector DB [Qdrant](https://qdrant.tech).
 
+<div align="center"><font size="4">
+<strong>
+<h6>----------------------</h6>
+(TL;DR) too long, didn't read
+
+[⚙️ Installation](#installation)
+USAGE :
+1 - click on "+ session" (**create a session**)
+2 - **Choose** a **Role**, an **LLM** (optional settings)
+3 - click on **Load LLM**
+(3) - If context mode is "Full" - choose at least one file
+(3) - If context mode is "RAG" - choose at least one file and click "Context Vectorization"
+(optional settings for the number of K extracts and their size)
+4 - Write your prompt. Once finished, click **Ctrl+Enter**
+5 - Validate your query with **Ctrl+Enter**...
+
+<h6>----------------------</h6>
+Presentation
+
+</strong></font>
+
+</div>
+
 The architecture mainly separates two layers :
 
 -   core/ : business logic, data models, config managers, LLM manager, rag submodule, theme, tiktoken converter.
@@ -49,7 +72,7 @@ While this pattern is useful in this purpose, it also introduces some difficulty
 
 ---
 
-<h2 id="tech-stack" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⚙️ Tech Stack</h2>
+<h2 id="tech-stack">⚙️ Tech Stack</h2>
 
 -   **Ollama** (Local LLM server with REST API)
 -   **PyQt6** (GUI framework)
@@ -63,7 +86,7 @@ While this pattern is useful in this purpose, it also introduces some difficulty
 -   **pygments** (syntax highlighting)
 -   **Configs JSON** (gui general parameters, prompts/prompts configs, context parser filtering)
 
-<h2 id="features" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">🚀 Features</h2>
+<h2 id="features">🚀 Features</h2>
 
 ### 🧩 General (Chat, Toolbar...)
 
@@ -170,7 +193,7 @@ A modular system for enriching prompts with your documents (document-based knowl
 
 ---
 
-<h2 id="installation" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⚙️ Installation</h2>
+<h2 id="installation">⚙️ Installation</h2>
 
 ### 0. Install [Python 3.13+](https://www.python.org/downloads/) (earlier versions may work… I just haven’t tested them!) and [git](https://git-scm.com/downloads)
 
@@ -237,6 +260,7 @@ ollama pull mistral-small3.2:24b
 ```
 
 You can use any local model compatible with Ollama (`mistral`, `qwen3`, `gemma3`, `gpt‑oss`, etc.).
+If you have very little resources (RAM and VRAM), take a gemma3n:e4b, or smaller (mistral:7b, deepseek-r1:latest)
 
 **B.** Download the embedding model `"nomic-embed-text:latest"` (RAG will not be possible without it):
 
@@ -311,6 +335,7 @@ for chat/general purpose :
 | --- | --- | --- |
 | `gemma3n:e4b` | for low-end CPU (>12GB RAM) | MOE, lightweight and very fast |
 | `phi4:14b` | \~8 GB VRAM + ~8 GB RAM | Dense, lightweight and quite fast |
+| `gpt-oss:20b` | ~6 GB VRAM + ~12 GB RAM | MOE, very fast, performant |  
 | `qwen3:30b-a3b` | \~8 GB VRAM + ~16 GB RAM | MOE, very fast, performant |
 | `qwen3:30b` | \~8 GB VRAM + ~16 GB RAM | Dense, fast, performant |
 | `gemma3:27b-it-qat` | ~12 GB VRAM + ~16 GB RAM | Dense, good balance, optimized quant (qat) |
@@ -320,19 +345,19 @@ for chat/general purpose :
 for coding:
 | Model | Min VRAM / RAM | Notes |
 | --- | --- | --- |
-| `qwen3-coder:30b-a3b` | \~8 GB VRAM + ~16 GB RAM | MOE, Fast, performant |
+| `gpt-oss:20b` | ~6 GB VRAM + ~12 GB RAM | MOE, very fast, performant |  
+| `qwen3-coder:30b-a3b` | \~8 GB VRAM + ~16 GB RAM | MOE, fast, performant |
 | `gemma3:27b-it-qat` | ~12 GB VRAM + ~16 GB RAM | Dense, good balance and optimized quant (qat) |
 | `qwen3-coder:30b` | \~8 GB VRAM + ~16 GB RAM | Dense, more performant |
 | `magistral:24b` | \~8 GB VRAM + ~16 GB RAM | Dense, very performant |
 | `gpt-oss:120b` | ~16 GB VRAM + ~64 GB RAM | MOE, Bigger, stronger, quite accurate |
-| `GLM-4.5-Air-IQ4_XS` | ~16 GB VRAM + ~64 GB RAM | MOE, Bigger, stronger, more accurate but slower |
 
 Note for beginners :
 MOE (Mixture-Of-Experts) LLM are faster and more ressource friendly than Dense LLM
 
 ---
 
-<h2 id="keyboard-shortcuts" style="background-color: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">⌨️ Keyboard Shortcuts</h2>
+<h2 id="keyboard-shortcuts">⌨️ Keyboard Shortcuts</h2>
 
 | Shortcut             | Context                                                                                                               |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -347,7 +372,7 @@ MOE (Mixture-Of-Experts) LLM are faster and more ressource friendly than Dense L
 
 ---
 
-<h2 id="file-structure" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">🗂️ File Structure</h2>
+<h2 id="file-structure">🗂️ File Structure</h2>
 
 ```
 project_root/
@@ -428,7 +453,7 @@ project_root/
 
 ---
 
-<h2 id="license" style="background: rgba(39, 76, 119, 0.5); color: rgb(220, 195, 170); border: 3px solid rgb(220, 195, 170); border-radius: 0px 20px 10px 20px; font-weight: bolder;  padding: 10px;">📜 License</h2>
+<h2 id="license">📜 License</h2>
 
 This project is licensed under the GPL v3. See the [LICENSE](https://github.com/python-qt-tools/PyQt6-stubs/blob/main/LICENSE) file for details.
 

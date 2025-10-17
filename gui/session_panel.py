@@ -36,7 +36,8 @@ class SessionListWidget(QListWidget):
         self.setDropIndicatorShown(True)
         # Active l'auto-scroll quand on drague près du haut/bas
         self.setAutoScroll(True)
-        self.setAutoScrollMargin(12)
+        self.setAutoScrollMargin(20)  # zone de déclenchement de l'autoscroll
+        self.verticalScrollBar().setSingleStep(30)  # vitesse d’autoscroll
 
         self._last_highlight = None
         # === ligne de dépôt ===
@@ -47,6 +48,9 @@ class SessionListWidget(QListWidget):
         # Utilise la couleur de highlight du style
         self._drop_line.setStyleSheet("background-color: palette(highlight); border: white;")
         self._drop_line.hide()
+        # mémorise le mode de dépôt pendant le drag
+        self._drop_mode = None  # "above", "below" ou None
+        self._drop_target = None  # QListWidgetItem sur lequel le drop s’applique
 
     def startDrag(self, supportedActions):
         """
@@ -93,35 +97,60 @@ class SessionListWidget(QListWidget):
         pos = event.position().toPoint()
         idx = self.indexAt(pos)
 
-        # Highlight des widgets
+        # 1. Nettoyer le highlight précédent
         if self._last_highlight:
             self._last_highlight.setProperty("droppable", False)
             self._last_highlight.style().unpolish(self._last_highlight)
             self._last_highlight.style().polish(self._last_highlight)
             self._last_highlight = None
 
-        if idx.isValid():
-            item = self.item(idx.row())
+        # 2. Aucun item sous le curseur → ligne viewport (racine) ---
+        if not idx.isValid():
+            self._drop_line.setGeometry(4, pos.y() - 1, self.viewport().width() - 8, 2)
+            self._drop_line.show()
+            self._drop_mode = "above"  # on dépose à la racine
+            self._drop_target = None
+            QAbstractItemView.dragMoveEvent(self, event)
+            event.accept()
+            return
+
+        # 3. Un item est sous le curseur
+        item = self.item(idx.row())
+        rect = self.visualRect(idx)  # rectangle de l’item dans le viewport
+        top_zone = rect.top() + int(0.10 * rect.height())  # + 10 % du haut
+        bottom_zone = rect.bottom() - int(0.10 * rect.height())  # + 10 % du bas
+
+        if pos.y() < top_zone:  # curseur dans la zone haute → INSERT BEFORE
+            line_y = rect.top()
+            self._drop_mode = "above"
+            self._drop_target = item
+        elif pos.y() > bottom_zone:  # zone basse → INSERT AFTER
+            line_y = rect.bottom()
+            self._drop_mode = "below"
+            self._drop_target = item
+        else:  # zone centrale → on garde le highlight habituel
+            self._drop_mode = None
+            self._drop_target = item
+            self._drop_line.hide()
+            # mettre le highlight du widget (déjà fait plus haut)
             w = self.itemWidget(item)
             if w:
                 w.setProperty("droppable", True)
                 w.style().unpolish(w)
                 w.style().polish(w)
                 self._last_highlight = w
-        else:
-            # positionne la ligne dans le viewport
-            y = pos.y()
-            w = self.viewport().width()
-            self._drop_line.setGeometry(4, y - 1, w - 8, 3)
-            self._drop_line.show()
+            QAbstractItemView.dragMoveEvent(self, event)
+            event.accept()
+            return
 
-        # Déléguer l'autoscroll et l'indicateur de dépôt
-        # on appelle QAbstractItemView.dragMoveEvent _avant_ accept
+        # 4. Afficher la ligne d’insertion
+        self._drop_line.setGeometry(4, line_y - 1, self.viewport().width() - 8, 2)
+        self._drop_line.show()
+        self._drop_target = item  # mémoriser l’item concerné
+
+        # laisser Qt gérer l’autoscroll
         QAbstractItemView.dragMoveEvent(self, event)
-
-        # On accepte le drag pour déclencher le drop éventuel
         event.accept()
-        self._drop_line_y = None
 
     def dropEvent(self, event):
         """
@@ -132,68 +161,55 @@ class SessionListWidget(QListWidget):
         3. Emits the signal move_to_folder
         4. Cleans the deposit indicator
         """
-        # print("debug : dropEvent called, formats : ", event.mimeData().formats())
         # Vérifier si l'élément glissé contient bien le format MIME attendu
         md = event.mimeData()
         if not md.hasFormat("application/x-session-id"):
-            # print(" -> format non reconnu, abort")
             return event.ignore()
 
-        # print(" -> format reconnu, je continue")
         # cache la ligne
         self._drop_line.hide()
         if self._last_highlight:
-            self._last_highlight.setStyleSheet("")
+            self._last_highlight.setProperty("droppable", False)
+            self._last_highlight.style().unpolish(self._last_highlight)
+            self._last_highlight.style().polish(self._last_highlight)
             self._last_highlight = None
 
-        # Récupérer l'ID de la session déplacée
         src_id = int(bytes(md.data("application/x-session-id")).decode())
 
-        # cibles par défaut
+        # cible par défaut (racine)
         target_folder_id = None
         target_session_id = None
 
-        # Déterminer la cible (folder_id ou None)
-        pos = event.position().toPoint()
-        idx = self.indexAt(pos)
+        # on a réellement un item sous le curseur ?
+        if self._drop_target:
+            widget = self.itemWidget(self._drop_target)
+            is_folder = widget.property("isFolder") if widget else False
 
-        if idx.isValid():
-            dst_item = self.item(idx.row())
-            w = self.itemWidget(dst_item)
-            # si c'est un dossier (on a mis w.setProperty("isFolder", True))
-            if w and w.property("isFolder") is True:
-                target_folder_id = dst_item.data(Qt.ItemDataRole.UserRole)
+            if self._drop_mode is None:
+                # DROP ON ITEM
+                if is_folder:
+                    # drop sur le dossier lui‑même  → on veut le mettre dans ce dossier
+                    target_folder_id = self._drop_target.data(Qt.ItemDataRole.UserRole)
+                else:
+                    # drop sur une session → on crée UN NOUVEAU dossier contenant les deux
+                    target_folder_id = None
+                    target_session_id = self._drop_target.data(Qt.ItemDataRole.UserRole)
             else:
-                # sinon c'est une session
-                target_session_id = dst_item.data(Qt.ItemDataRole.UserRole)
-        else:
-            # drop en « vide » ou entre deux items : on dépose à la racine
-            target_folder_id = None
-            target_session_id = None
+                # DROP BETWEEN ITEMS (above / below)
+                # on insère dans le même dossier que l’item cible
+                target_folder_id = self._drop_target.data(Qt.ItemDataRole.UserRole + 1)
+                target_session_id = None
 
-        # 👉 Nettoyage centralisé du style "droppable" sur tous les widgets
-        for i in range(self.count()):
-            widget = self.itemWidget(self.item(i))
-            if widget:
-                widget.setProperty("droppable", False)
-                widget.style().unpolish(widget)
-                widget.style().polish(widget)
-        # Si on dépose sur soi-même, on ignore/annule complètement
+        # le drop sur soi‑même annule l'évènement (la session reste où elle est)
         if src_id == target_session_id:
-            if self._last_highlight:
-                self._last_highlight.setStyleSheet("")
-                self._last_highlight = None
             return event.ignore()
 
-        # Move to folder (émet les trois args)
+        # émission du signal attendu par MainWindow
         self.move_to_folder.emit(src_id, target_folder_id, target_session_id)
 
-        # Nettoyer le highlight
-        if self._last_highlight:
-            self._last_highlight.setStyleSheet("")  # Supprimer le style de highlight
-            self._last_highlight = None
-
-        # Accepter l'action de dépôt
+        # remise à zéro
+        self._drop_mode = None
+        self._drop_target = None
         event.acceptProposedAction()
 
     def dragLeaveEvent(self, event):
