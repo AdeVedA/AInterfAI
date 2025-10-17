@@ -40,17 +40,25 @@ A local LLM GUI for advanced chat, context injection, and document-aware RAG <br
 <div align="center"><font size="4">
 <strong>
 <h6>----------------------</h6>
-(TL;DR) too long, didn't read
+<h4>(TL;DR) too long, didn't read</h4>
 
 [⚙️ Installation](#installation)
+
 USAGE :
+
 1 - click on "+ session" (**create a session**)
+
 2 - **Choose** a **Role**, an **LLM** (optional settings)
+
 3 - click on **Load LLM**
+
 (3) - If context mode is "Full" - choose at least one file
+
 (3) - If context mode is "RAG" - choose at least one file and click "Context Vectorization"
 (optional settings for the number of K extracts and their size)
+
 4 - Write your prompt. Once finished, click **Ctrl+Enter**
+
 5 - Validate your query with **Ctrl+Enter**...
 
 <h6>----------------------</h6>
