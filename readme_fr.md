@@ -225,16 +225,10 @@ cd AInterfAI
 
 #### C - cloner le repo Github du projet dans ce répertoire
 
-dans le terminal (l'invite de commande) qui indique bien que vous êtes à l'adresse du dossier créé, écrivez tour à tour:
+dans le terminal (l'invite de commande) qui indique bien que vous êtes à l'adresse du dossier créé, écrivez :
 
 ```bash
-git init
-```
-
-puis :
-
-```bash
-git pull https://github.com/AdeVedA/AInterfAI -t main
+git clone https://github.com/AdeVedA/AInterfAI
 ```
 
 ### 2. Créer un Environnement Virtuel
@@ -254,14 +248,19 @@ pip install -r requirements.txt
 
 → [https://ollama.com/download](https://ollama.com/download)
 
-installez-le. Redémarrez si demandé. Une fois installé :
+installez-le. Redémarrez si demandé. Une fois installé, vérifiez (ou ajoutez-le) que le chemin d'installation d'Ollama est bien dans le path de vos variables d'environnement système
+
+-   touche windows, "variables", "Modifier les variables d'environnement système", "Variables d'environnement", selectionnez la ligne "Path", cliquez sur "modifier" et vérifiez que le chemin vers ollama est présent.
+-   Si non, cliquez sur "Nouveau"
+-   ajoutez: %LOCALAPPDATA%\Programs\Ollama (ou le chemin exact dans lequel vous avez installé Ollama)
+-   Cliquez "OK" pour sauvegarder.
 
 ### 5. Télécharger un LLM et un embedding
 
 → [https://ollama.com/search](https://ollama.com/search)
 Sur cette page, trouvez un modèle LLM dont la taille est de maximum 3/4 de votre VRAM+RAM (GB), cliquez sur son nom et copiez la commande à exécuter en terminal. Testez une fois en terminal avec une requête (après avoir fait un ollama run {nom_du_model_choisi}) comme ca vous êtes sûr que ca fonctionne côté serveur ollama.
 
-**A.** Téléchargez votre premier modèle (voir la section _Recommended Ollama Models_ si vous êtes perdu, ici on montre comment télécharger `mistral-small3.2:24b`) :
+**A.** Téléchargez votre premier modèle (voir la section [Modèles Ollama Recommandés](#modeles_recommandes) si vous êtes perdu, ici on montre comment télécharger `mistral-small3.2:24b`) :
 
 ```bash
 ollama pull mistral-small3.2:24b
@@ -280,7 +279,7 @@ ollama pull nomic-embed-text:latest
 
 → [https://github.com/qdrant/qdrant/releases](https://github.com/qdrant/qdrant/releases)
 
-Téléchargez le fichier correspondant à votre os, décompressez/ouvrez l'archive et mettez le fichier qdrant (binary) dans un dossier de votre choix. Vous **devez** alors indiquer le chemin vers `qdrant.exe` (Windows ex.: C:\BDD\Qdrant\qdrant.exe) ou `qdrant` (mac/linux ex: C:/BDD/Qdrant/qdrant) dans le fichier `.env` à la racine du projet (ouvrez -le avec un editeur de texte, insérez le bon chemin et sauvegardez).
+Téléchargez le fichier correspondant à votre os (qdrant-x86_64-pc-windows-msvc.zip pour Windows, qdrant-x86_64-apple-darwin.tar.gz pour Mac, etc..), décompressez/ouvrez l'archive et mettez le fichier qdrant (binary) dans un dossier de votre choix. Vous **devez** alors indiquer le chemin vers `qdrant.exe` (Windows ex.: C:\BDD\Qdrant\qdrant.exe) ou `qdrant` (mac/linux ex: C:/BDD/Qdrant/qdrant) dans le fichier `.env` à la racine du projet (ouvrez -le avec un editeur de texte, insérez le bon chemin et sauvegardez).
 Sinon, autre possibilité, le programme vous demandera le chemin vers qdrant au premier lancement du programme et l'inscrira dans le .env automatiquement.
 Vous pouvez aussi personnaliser le fichier de configuration Qdrant `config.yaml` dans le dossier `project_root\utils` si vous savez ce que vous faites.
 
@@ -333,33 +332,31 @@ Exécutez‑le depuis un terminal :
 ./run.sh
 ```
 
-## 🤖 Modèles Ollama Recommandés
+<h2 id="modeles_recommandes">🤖 Modèles Ollama Recommandés</h2>
 
 Les réponses les plus rapides proviennent de LLM entièrement chargés dans la VRAM du GPU, mais vous pouvez choisir des modèles plus performants (au prix d'une latence supérieure) en les chargeant à la fois en VRAM et en RAM.
 
 **Pour le chat / usage général :**
-
-| Modèle                 | VRAM / RAM min                     | Remarques                                            |
-| ---------------------- | ---------------------------------- | ---------------------------------------------------- |
-| `gemma3n:e4b`          | pour CPU bas de gamme (>12 GB RAM) | MOE, léger et très rapide                            |
-| `phi4:14b`             | ~8 GB VRAM + ~8 GB RAM             | Dense, léger et assez rapide                         |
-| `gpt-oss:20b`          | ~6 GB VRAM + ~12 GB RAM            | MOE, rapide, performant                              |
-| `qwen3:30b-a3b`        | ~8 GB VRAM + ~16 GB RAM            | MOE, rapide, performant                              |
-| `qwen3:30b`            | ~8 GB VRAM + ~16 GB RAM            | Dense, rapide, performant                            |
-| `gemma3:27b-it-qat`    | ~12 GB VRAM + ~16 GB RAM           | Dense, bon compromis, quantification optimisée (qat) |
-| `mistral-small3.2:24b` | ~8 GB VRAM + ~16 GB RAM            | Dense, bon compromis, performant                     |
-| `gpt-oss:120b`         | ~16 GB VRAM + ~64 GB RAM           | MOE, très grand, plus précis                         |
+| Modèle | VRAM / RAM min | Remarques |
+| --- | --- | --- |
+| `gemma3n:e4b` | pour CPU bas de gamme (>12 GB RAM) | MOE, léger et très rapide |
+| `phi4:14b` | ~8 GB VRAM + ~8 GB RAM | Dense, léger et assez rapide |
+| `gpt-oss:20b` | ~6 GB VRAM + ~12 GB RAM | MOE, rapide, performant |
+| `qwen3:30b-a3b` | ~8 GB VRAM + ~16 GB RAM | MOE, rapide, performant |
+| `qwen3:30b` | ~8 GB VRAM + ~16 GB RAM | Dense, rapide, performant |
+| `gemma3:27b-it-qat` | ~12 GB VRAM + ~16 GB RAM | Dense, bon compromis, quantification optimisée (qat) |
+| `mistral-small3.2:24b` | ~8 GB VRAM + ~16 GB RAM | Dense, bon compromis, performant |
+| `gpt-oss:120b` | ~16 GB VRAM + ~64 GB RAM | MOE, très grand, plus précis |
 
 **Pour le codage :**
-
-| Modèle                | VRAM / RAM min           | Remarques                                            |
-| --------------------- | ------------------------ | ---------------------------------------------------- |
-| `gpt-oss:20b`         | ~6 GB VRAM + ~12 GB RAM  | MOE, rapide, performant                              |
-| `qwen3-coder:30b-a3b` | ~8 GB VRAM + ~16 GB RAM  | MOE, rapide, performant                              |
-| `gemma3:27b-it-qat`   | ~12 GB VRAM + ~16 GB RAM | Dense, bon compromis, quantification optimisée (qat) |
-| `qwen3-coder:30b`     | ~8 GB VRAM + ~16 GB RAM  | Dense, encore plus performant                        |
-| `magistral:24b`       | ~8 GB VRAM + ~16 GB RAM  | Dense, très performant                               |
-| `gpt-oss:120b`        | ~16 GB VRAM + ~64 GB RAM | MOE, très grand, plus précis                         |
+| Modèle | VRAM / RAM min | Remarques |
+| --- | --- | --- |
+| `gpt-oss:20b` | ~6 GB VRAM + ~12 GB RAM | MOE, rapide, performant |
+| `qwen3-coder:30b-a3b` | ~8 GB VRAM + ~16 GB RAM | MOE, rapide, performant |
+| `gemma3:27b-it-qat` | ~12 GB VRAM + ~16 GB RAM | Dense, bon compromis, quantification optimisée (qat) |
+| `qwen3-coder:30b` | ~8 GB VRAM + ~16 GB RAM | Dense, encore plus performant |
+| `magistral:24b` | ~8 GB VRAM + ~16 GB RAM | Dense, très performant |
+| `gpt-oss:120b` | ~16 GB VRAM + ~64 GB RAM | MOE, très grand, plus précis |
 
 _Note pour les débutants :_ les LLM MOE (Mixture-Of-Experts) sont plus rapides et moins gourmands en ressources que les LLM denses.
 

@@ -224,16 +224,10 @@ cd AInterfAI
 
 #### C - Clone the project's GitHub repository into this directory
 
-In the terminal (command prompt) that shows you are in the newly created directory, type the following commands in sequence:
+In the terminal (command prompt) that shows you are in the newly created directory, type the following command :
 
 ```bash
-git init
-```
-
-then:
-
-```bash
-git pull https://github.com/AdeVedA/AInterfAI -t main
+git clone https://github.com/AdeVedA/AInterfAI
 ```
 
 ### 2. Create a Virtual Environment
@@ -252,10 +246,19 @@ pip install -r requirements.txt
 ### 4. Install [Ollama](https://ollama.com/download)
 
 → [https://ollama.com/download](https://ollama.com/download)
+once installed, verify (or else add add it) that ollama installation folder is in your system environment variable path :
 
-Once installed:
+-   Under "System variables," select "Path" and see if it's there
+-   If not, click "Edit"
+-   Click "New" and add: %LOCALAPPDATA%\Programs\Ollama (or the folder you installed it to)
+-   Click "OK" to save changes
 
-**A.** Download your first model (see the “Recommended Ollama Models” section if you are confused; here we show how to download `mistral‑small3.2:24b`):
+### 5. Once Ollama is Installed : download a LLM and an embedding model
+
+→ [https://ollama.com/search](https://ollama.com/search)
+On this page, find an LLM model whose size is maximum 3/4 of your VRAM+RAM (GB), click on its name and copy the command to run in terminal. Test once in terminal with a request (after having made an ollama run {name_of_the_chosen_model}) so you are sure that it works on the ollama server side.
+
+**A.** Download your first model (see the [“Recommended Ollama Models”](#recommanded_models) section if you are confused; here we show how to download `mistral‑small3.2:24b`):
 
 ```bash
 ollama pull mistral-small3.2:24b
@@ -270,17 +273,17 @@ If you have very little resources (RAM and VRAM), take a gemma3n:e4b, or smaller
 ollama pull nomic-embed-text:latest
 ```
 
-### 5. Install [Qdrant](https://github.com/qdrant/qdrant/releases)
+### 6. Install [Qdrant](https://github.com/qdrant/qdrant/releases)
 
 → [https://github.com/qdrant/qdrant/releases](https://github.com/qdrant/qdrant/releases)
 
-Just put the binary qdrant (inside the archive you downloaded, corresponding to your OS) in a folder. You then **have to** put the path to `qdrant.exe` (Windows e.g.: C:\BDD\Qdrant\qdrant.exe) or `qdrant` (mac/linux e.g.: C:/BDD/Qdrant/qdrant) in project root\.env file (open with a text editor, put the path and save)
+Just put the binary qdrant (inside the archive you downloaded, corresponding to your OS : (qdrant-x86_64-pc-windows-msvc.zip for Windows, qdrant-x86_64-apple-darwin.tar.gz fors Mac, etc..)) in a folder. You then have to put the path to `qdrant.exe` (Windows e.g.: C:\BDD\Qdrant\qdrant.exe) or `qdrant` (mac/linux e.g.: C:/BDD/Qdrant/qdrant) in project root\.env file (open with a text editor, put the path and save)
 Otherwise, on first run the program will ask for the path to qdrant and put it in place automatically.
 Optionally, customize the Qdrant config file `config.yaml` in the project root\utils folder if you know what you're doing.
 
 AInterfAI will then be able to start Qdrant automatically at startup.
 
-### 6. Launch AInterfAI
+### 7. Launch AInterfAI
 
 ```bash
 python main.py
@@ -289,7 +292,7 @@ python main.py
 On first run, the program will parse, through _local_ Ollama-API requests (`api/tags` & `api/show`), the models informations to record them in DB and give hints about each LLM recommanded hyperparameters and properties inside Ollama's Modelfile to give priority to these parameters over those associated to default roles/system prompt (which are LLM agnostic).
 If needed, you can change the delay (sync_time: timedelta = timedelta(days=30)) between each llm_properties parsing in core\llm_properties.py.)
 
-### 7. Friendly launching (if you want an automated launching)
+### 8. Friendly launching (if you want an automated launching)
 
 #### A. Windows
 
@@ -327,12 +330,12 @@ Run it from a Terminal
 ./run.sh
 ```
 
-## 🤖 Recommended Ollama Models
+<h2 id="recommanded_models">🤖 Recommended Ollama Models</h2>
 
 Fastest LLM answers come from fully loading LLM into GPU VRAM,
 but you can use better LLM (if you are patient with answers), loading them on both VRAM and RAM
 
-for chat/general purpose :
+**for chat/general purpose :**
 | Model | Min VRAM / RAM | Notes |
 | --- | --- | --- |
 | `gemma3n:e4b` | for low-end CPU (>12GB RAM) | MOE, lightweight and very fast |
@@ -344,7 +347,7 @@ for chat/general purpose :
 | `mistral-small3.2:24b` | \~8 GB VRAM + ~16 GB RAM | Dense, good balance, performant |
 | `gpt-oss:120b` | ~16 GB VRAM + ~64 GB RAM | MOE, Bigger, stronger, quite accurate |
 
-for coding:
+**for coding :**
 | Model | Min VRAM / RAM | Notes |
 | --- | --- | --- |
 | `gpt-oss:20b` | ~6 GB VRAM + ~12 GB RAM | MOE, very fast, performant |  
