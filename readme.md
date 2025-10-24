@@ -277,20 +277,31 @@ ollama pull nomic-embed-text:latest
 
 → [https://github.com/qdrant/qdrant/releases](https://github.com/qdrant/qdrant/releases)
 
-Just put the binary qdrant (inside the archive you downloaded, corresponding to your OS : (qdrant-x86_64-pc-windows-msvc.zip for Windows, qdrant-x86_64-apple-darwin.tar.gz fors Mac, etc..)) in a folder. You then have to put the path to `qdrant.exe` (Windows e.g.: C:\BDD\Qdrant\qdrant.exe) or `qdrant` (mac/linux e.g.: C:/BDD/Qdrant/qdrant) in project root\.env file (open with a text editor, put the path and save)
-Otherwise, on first run the program will ask for the path to qdrant and put it in place automatically.
+Just put the binary qdrant (inside the archive you downloaded, corresponding to your OS : (qdrant-x86_64-pc-windows-msvc.zip for Windows, qdrant-x86_64-apple-darwin.tar.gz for Mac, etc..)) in a folder.
+
+You then have to put the path to `qdrant.exe` (Windows e.g.: C:\BDD\Qdrant\qdrant.exe) or `qdrant` (mac/linux e.g.: C:/BDD/Qdrant/qdrant) in the project root `.env` file (open with a text editor, put the path and save)
+Otherwise don't worry, on first run the program will ask you for the path to qdrant and put it in `.env` file automatically.
+
 Optionally, customize the Qdrant config file `config.yaml` in the project root\utils folder if you know what you're doing.
 
 AInterfAI will then be able to start Qdrant automatically at startup.
 
 ### 7. Launch AInterfAI
 
+Be sure to have the virtual environment activated to launch the app (or use "8. Friendly launching" solution) :
+
+```bash
+env\Scripts\activate       # or `source env/bin/activate` on macOS/Linux
+```
+
+Then, finally, launch the app :
+
 ```bash
 python main.py
 ```
 
 On first run, the program will parse, through _local_ Ollama-API requests (`api/tags` & `api/show`), the models informations to record them in DB and give hints about each LLM recommanded hyperparameters and properties inside Ollama's Modelfile to give priority to these parameters over those associated to default roles/system prompt (which are LLM agnostic).
-If needed, you can change the delay (sync_time: timedelta = timedelta(days=30)) between each llm_properties parsing in core\llm_properties.py.)
+If needed, you can change the delay (sync_time: timedelta = timedelta(days=30)) between each llm_properties parsing in core\llm_properties.py.
 
 ### 8. Friendly launching (if you want an automated launching)
 

@@ -631,7 +631,7 @@ class MainWindow(QMainWindow):
         Opens a dialog box, creates the folder and refreshes.
         """
         # 1) Demander le nom du dossier
-        name, ok = QInputDialog.getText(self, "Nouveau dossier", "Nom du dossier :")
+        name, ok = QInputDialog.getText(self, "New folder", "Folder Name :")
         if not ok or not name.strip():
             return  # annulation ou vide
 

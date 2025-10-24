@@ -237,7 +237,7 @@ class Toolbar(QToolBar):
             "Save Configuration : Click Save Config to persist the current setting. "
             "The selected role and LLM, together with the system prompt and any modified parameters, will be stored.\n"
             "Add or Edit : Create a new custom role with + New Role or "
-            "edit the JSON file directly at core\\prompt_config_defaults.json."
+            "edit the JSON file directly at core\\prompt_config_defaults.json (and relaunch app in this case)."
         )
         self.prompt_label = QLabel("Role :")
         self.prompt_label.setObjectName("toolbar_prompt_label")

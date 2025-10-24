@@ -235,10 +235,11 @@ git clone https://github.com/AdeVedA/AInterfAI
 
 ```bash
 python -m venv env         # ou `python3 -m venv env` sur Mac/Linux
+# puis activez l'environnement virtuel
 env\Scripts\activate       # ou "source env/bin/activate" sur Mac/Linux
 ```
 
-### 3. Installer les Dépendances
+### 3. Installer les Dépendances avec l'environnement virtuel activé "(env) C:..."
 
 ```bash
 pip install -r requirements.txt
@@ -279,13 +280,24 @@ ollama pull nomic-embed-text:latest
 
 → [https://github.com/qdrant/qdrant/releases](https://github.com/qdrant/qdrant/releases)
 
-Téléchargez le fichier correspondant à votre os (qdrant-x86_64-pc-windows-msvc.zip pour Windows, qdrant-x86_64-apple-darwin.tar.gz pour Mac, etc..), décompressez/ouvrez l'archive et mettez le fichier qdrant (binary) dans un dossier de votre choix. Vous **devez** alors indiquer le chemin vers `qdrant.exe` (Windows ex.: C:\BDD\Qdrant\qdrant.exe) ou `qdrant` (mac/linux ex: C:/BDD/Qdrant/qdrant) dans le fichier `.env` à la racine du projet (ouvrez -le avec un editeur de texte, insérez le bon chemin et sauvegardez).
+Téléchargez le fichier correspondant à votre os (qdrant-x86_64-pc-windows-msvc.zip pour Windows, qdrant-x86_64-apple-darwin.tar.gz pour Mac, etc..), décompressez/ouvrez l'archive et mettez le fichier qdrant (binary) dans un dossier de votre choix.
+
+Vous devez alors indiquer le chemin vers `qdrant.exe` (Windows ex.: C:\BDD\Qdrant\qdrant.exe) ou `qdrant` (mac/linux ex: C:/BDD/Qdrant/qdrant) dans le fichier `.env` à la racine du projet (ouvrez -le avec un editeur de texte, insérez le bon chemin et sauvegardez).
 Sinon, autre possibilité, le programme vous demandera le chemin vers qdrant au premier lancement du programme et l'inscrira dans le .env automatiquement.
+
 Vous pouvez aussi personnaliser le fichier de configuration Qdrant `config.yaml` dans le dossier `project_root\utils` si vous savez ce que vous faites.
 
 AInterfAI pourra alors lancer Qdrant automatiquement au démarrage.
 
 ### 7. Lancer AInterfAI
+
+L'environnement virtuel du logiciel doit être activé pour lancer l'application (ou bien utilisez la solution "8. Lancement facile" qui suit...):
+
+```bash
+env\Scripts\activate       # ou "source env/bin/activate" sur Mac/Linux
+```
+
+Lancez enfin l'application :
 
 ```bash
 python main.py
