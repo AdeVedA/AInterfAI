@@ -747,19 +747,7 @@ class MainWindow(QMainWindow):
             f.write(html_export)
 
     def _session_to_html(self, session):
-        # TODO revoir l'export (css etc...)
-        lines = [
-            "<html><head><meta charset='utf-8'></head><body>",
-            f"<h1>Session: {session.session_name}</h1>",
-            f"<p><i>Created: {session.created_at.strftime("%Y/%m/%d %H:%M")}</i></p>",
-        ]
-        for m in session.messages:
-            meta = f"<b>{m.sender.upper()}</b> [{m.timestamp.strftime("%Y/%m/%d %H:%M")}]"
-            if m.sender == "llm":
-                meta += f" ({m.llm_name}, {m.prompt_type})"
-            lines.append(f"<div class='message'><p>{meta}</p><pre>{m.content}</pre></div>")
-        lines.append("</body></html>")
-        return "\n".join(lines)
+        return self.panel_chat._renderer_worker._renderer.session_to_html(session)
 
     def on_save_role_llm_config(self):
         """Back up the prompt's current configuration in DB."""
@@ -867,6 +855,8 @@ class MainWindow(QMainWindow):
                     self.toolbar.llm_combo.setCurrentIndex(idx)
 
             last_prompt = data.get("last_prompt")
+            if not last_prompt:
+                self.toolbar.prompt_button.setCurrentIndex(0)
             if last_prompt:
                 idx = self.toolbar.prompt_button.findText(last_prompt)
                 if idx != -1:

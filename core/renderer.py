@@ -21,6 +21,8 @@ from pygments.token import (
 )
 from pygments.util import ClassNotFound
 
+from .render_templates import CSS_HTML_TEMPLATE, CSS_MD_TEMPLATE
+
 # Monokai-style default colours
 _DEFAULT_CODE_FG = "#f8f8f2"
 _DEFAULT_CODE_BG = "#272822"
@@ -150,7 +152,7 @@ class MarkdownRenderer:
         return "".join(parts)
 
     # Highlight code blocks
-    def _highlight_code_html(self, html: str) -> str:
+    def _highlight_code_html(self, html: str, md_rend=True) -> str:
         """
         Replace <pre><code ...>...</code></pre> blocks with Pygments-highlighted HTML.
         """
@@ -223,12 +225,23 @@ class MarkdownRenderer:
 
             # wrap les fragments mis en évidence en un seul <pre> en forcant bg/fg/font
             return (
-                f'<table cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 15;">'
-                f'<tr><td style="background:{_DEFAULT_CODE_BG}; padding:10px; border-radius:6px; ">'
-                f'<pre style="margin:0; color:{_DEFAULT_CODE_FG}; tab-size:4; '
-                f'white-space: pre-wrap; word-wrap: break-word; display: inline-block;">'
-                f"{highlighted}"
-                f"</pre></td></tr></table>"
+                (
+                    f'<table cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 15;">'
+                    f'<tr><td style="background:{_DEFAULT_CODE_BG}; padding:10px; border-radius:6px; ">'
+                    f'<pre style="margin:0; color:{_DEFAULT_CODE_FG}; tab-size:4; '
+                    f'white-space: pre-wrap; word-wrap: break-word; display: inline-block;">'
+                    f"{highlighted}"
+                    f"</pre></td></tr></table>"
+                )
+                if md_rend
+                else (
+                    f'<table cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 15;">'
+                    f'<tr><td style="background:{_DEFAULT_CODE_BG}; padding:0px;">'
+                    f'<pre style="margin:0; color:{_DEFAULT_CODE_FG}; tab-size:4; '
+                    f'white-space: pre-wrap; word-wrap: break-word; display: inline-block;">'
+                    f"{highlighted}"
+                    f"</pre></td></tr></table>"
+                )
             )
 
         # Appliquer la substitution pour chaque bloc <pre><code>
@@ -244,7 +257,12 @@ class MarkdownRenderer:
 
         return _RE_KEYCAP.sub(_repl, text)
 
-    def render(self, markdown_text: str) -> str:
+    def render(self, markdown_text: str, md_rend=True) -> str:
+        # garder le thinking entre balises dans indications markdown
+        markdown_text = re.sub(
+            r"<think>(.*?)</think>", r"**[thinking]**\n\n\1\n\n**[/thinking]**", markdown_text, flags=re.S | re.I
+        )
+
         # soft line breaks (outside fenced code)
         markdown_text = self._add_soft_line_breaks(markdown_text)
 
@@ -266,7 +284,9 @@ class MarkdownRenderer:
         )
 
         # post-process: pygments highlight + couleurs
-        html_body = self._highlight_code_html(html_body)
+        html_body = (
+            self._highlight_code_html(html_body) if md_rend else self._highlight_code_html(html_body, md_rend=False)
+        )
 
         return html_body
 
@@ -326,7 +346,7 @@ class MarkdownRenderer:
     def session_to_markdown(self, session):
         """proccess the session messages to render them in an app-current-theme stylized markdown doc"""
         lines = [
-            f"{self.theme_manager.apply_theme_to_stylesheet(self.CSS_MD_TEMPLATE)}\n"
+            f"{self.theme_manager.apply_theme_to_stylesheet(CSS_MD_TEMPLATE)}\n"
             f"# AInter-Session :<br>****{session.session_name}****"
         ]
         for m in session.messages:
@@ -348,141 +368,30 @@ class MarkdownRenderer:
             lines.append(f"{meta}\n{m.content.replace("\n", " \n")}\n")  #
         return "\n\n".join(lines)
 
-    CSS_MD_TEMPLATE = """
-<style>
-  body {
-background : /*Base*/ !important;
-}
-  blockquote, pre {
-background : /*Base*/ !important;
-border: 1px solid /*Warning*/ !important;
-color: /*Text*/  !important;
-padding: 8px 8px 8px 8px !important;
-margin: 5px 5px 5px 5px !important;
-}
-  pre {
-background: linear-gradient(to left, #2a2d2e, #1e1e1e) !important;
-color: GhostWhite !important;
-}
-  code {
-}
-  code pre {
-}
-  p {
-color: /*Text*/  !important;
-font-size: 100%;
-}
-  ul, li, ol {
-color: /*Text*/  !important;
-font-size: 100%;
-padding: 3px;
-}
-  strong, b {
-color: /*Text2*/  !important;
-font-size: 120%;
-}
-  em, i {
-color: /*Text*/  !important;
-font-size: 110%;
-}
-  a, img {
-background: linear-gradient(to right, /*Danger*/, /*Base1*/) !important;
-border: 1px outset /*Danger*/ !important;
-border-radius: 15px;
-color: /*Text*/  !important;
-padding: 5px;
-margin: 2px 2px 2px 2px;
-}
-  a:hover, img:hover {
-background: linear-gradient(to left, /*Danger*/, /*Base1*/) !important;
-color: /*Text2*/  !important;
-padding: 5px;
-}
-  h1 {
-background: linear-gradient(to left, /*Danger*/, /*Base1*/) !important;
-color: /*Accent*/  !important;
-text-align: center;
-border: 2px outset /*Danger*/ !important; border-radius: 50px;
-font-size: 160%; font-weight: bolder;
-padding: 10px;
-}
-  h2 {
-background: linear-gradient(to right, /*Danger*/, /*Base1*/) !important;
-color: /*Text*/  !important;
-border: 3px groove /*Warning*/ !important; border-radius: 0px 20px 10px 20px;
-font-size: 140%;
-font-weight: bold;
-padding: 10px;
-}
-  h3 {
-background: /*Base1*/  !important;
-color: /*Text*/  !important;
-border: 2px ridge /*Warning*/ !important; border-radius: 0px 15px 0px 15px;
-font-size: 130% ; font-weight: bolder ;
-margin-left : 20px;
-padding: 5px;
-}
-  h4 {
-background: /*Base*/  !important;
-color: /*Text2*/  !important;
-border-bottom: 6px ridge /*Warning*/ !important; border-radius: 0px 0px 0px 15px;
-font-size: 120% !important; font-weight: bolder ;
-margin-left : 40px;
-padding: 4px;
-}
-  h5 {
-background: /*Base*/  !important;
-color: /*Text*/  !important;
-border-left: 6px outset /*Warning*/ !important; border-radius: 0px 0px 0px 15px;
-font-size: 110% !important; font-weight: bolder ;
-margin-left : 60px;
-padding: 3px;
-}
-  h6 {
-background: /*Base*/  !important;
-color: /*Text*/  !important;
-border-left: 6px outset /*Danger*/ !important;
-font-size: 105% !important; font-weight: bolder ;
-margin-left : 80px;
-padding: 3px;
-}
-  table, th, td {
-background: /*Base*/  !important;
-color: /*Text*/  !important;
-border-collapse: collapse;
-width: auto !important;
-padding: 4px;
-}
-  th {
-background: /*Base1*/  !important;
-border: 2px solid /*Warning*/ !important;
-color : /*Text2*/  !important;
-}
-  td {
-border: 2px solid /*Warning*/ !important;
-background:linear-gradient(to left, /*Base*/, /*Base1*/) !important;
-}
-  hr {
-background:linear-gradient(to right, /*Danger*/, /*Warning*/) !important;
-}
-  llm {
-background: linear-gradient(to right, /*Danger*/, /*Base1*/) !important;
-color: /*Accent*/  !important;
-border-left: 12px double /*Text2*/ !important; border-radius: 5px;
-font-size: 200% ;
-font-weight: bolder !important;
-padding: 10px;
-margin: 20px;
-text-align: left;
-}
-  role {
-color: /*Warning*/ !important;
-font-size: 120% ;
-font-style:italic;
-}
-  date {
-color: /*Text2*/ !important;
-font-weight: normal !important;
-}
-</style>
-    """
+    def session_to_html(self, session):
+        """proccess the session messages to render them in an app-current-theme stylized html doc"""
+        themed_css_style = self.theme_manager.apply_theme_to_stylesheet(CSS_HTML_TEMPLATE)
+        lines = [
+            f"<html><head><meta charset='utf-8'>{themed_css_style}</head><body>",
+            f"<h1>AInter-Session :<br>{session.session_name}</h1>",
+        ]
+        for m in session.messages:
+            if m.sender == "user":
+                meta = (
+                    f"<br><br><llm>🧙‍♂️{m.sender.capitalize()}"
+                    f"<font size='3'><date> - {m.timestamp.strftime("%Y/%m/%d %H:%M")}"
+                    "</date></font>"
+                    "</llm><br>"
+                )
+            if m.sender == "llm":
+                meta = (
+                    f"<br><br><llm>🤖"
+                    f"<font size='6'>{m.llm_name} </font><font size='5'> <i>as</i> "
+                    f"<role>{m.prompt_type} </role></span></font>"
+                    f"<font size='3'><date> - {m.timestamp.strftime("%Y/%m/%d %H:%M")}"
+                    "</date></font></llm><br>"
+                )
+            html_body = self.render(m.content)
+            lines.append(f"<div><p>{meta}</p><br>{html_body}</div>")  #
+        lines.append("</body></html>")
+        return "\n".join(lines)
