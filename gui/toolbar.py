@@ -286,9 +286,10 @@ class Toolbar(QToolBar):
 
         # Indicateur d'état LLM (LED rouge/vert)
         self.llm_status_indicator = QLabel()
+        self.llm_status_indicator.setObjectName("llm_status_indicator")
         self.llm_status_indicator.setFixedSize(20, 20)
         self.llm_status_indicator.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.llm_status_indicator.setStyleSheet("background:transparent; border:none;")
+        # self.llm_status_indicator.setStyleSheet("background:transparent; border:none;")
         self.llm_status_indicator.setToolTip(
             "indicates whether an LLM is loaded or not\nPoll interval timer can be defined in Settings"
         )

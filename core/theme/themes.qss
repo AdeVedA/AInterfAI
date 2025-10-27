@@ -455,7 +455,6 @@ QPushButton#filter_button:hover {
 }
 
 /* menu du filtre de selection */
-
 QWidget QMenu#filter_menu {
   background-color: /*Base1*/;
   border: 2px solid /*Base*/;
@@ -521,13 +520,15 @@ QToolButton#btnToggleFolder {
 }
 
 /* les noms des folders */
-QListWidget#session_list QWidget#folderRows QLabel {
+QWidget#folderRows QLabel#folderTitleLabel {
+  background-color: transparent;
   color: /*Text*/;
   font-size: 15px;
   font-weight: bold;
 }
 /* les noms des session */
-QListWidget#session_list QWidget#sessionRows QLabel {
+QLabel#sessionLabel {
+  background-color: transparent;
   color: /*Text*/;
   font-size: 15px;
 }
@@ -537,35 +538,44 @@ QListWidget#session_list QWidget[isFolder="true"],
 QListWidget#session_list QWidget[isHeader="true"] {
   border: none;
   outline: none;
-  background: transparent;
+  background-color: transparent;
+}
+
+/* - Survol -- */
+/* QListWidget#session_list QWidget#sessionRows:hover,
+QListWidget#session_list QWidget#folderRows:hover, */
+QListWidget#session_list[dragging="false"]::item:hover {
+  border: 1px solid /*Accent*/ !important;
+  color: /*Base*/;
+  padding: 0px;
+  margin: 0px;
+  border-radius: 5px;
 }
 
 QWidget#sessionRows,
 QWidget#folderRows {
   background: transparent;
-  border: none;
+  /* border: none; */
   margin: 0px;
   padding: 0px;
 }
 
-/* - Survol -- */
-QListWidget#session_list QWidget[sessionRow="true"]:hover {
-  border: 1px solid /*Accent*/;
-  color: /*Base*/;
-  padding:0px;
-  border-radius: 5px;
-}
-
 /* - Sélection ("currentItem") -- */
 QListWidget#session_list QWidget[sessionRow="true"][selected="true"] {
+  border: none;
   background: /*Warning*/;
   /* margin: 2px 2px 2px 2px; */
+  padding: 0px;
   border-radius: 5px;
 }
 
 /* - Cible durant un drag&drop -- */
 QListWidget#session_list QWidget[sessionRow="true"][droppable="true"] {
   border: 1px dashed /*Accent*/;
+}
+QListWidget#session_list QWidget[sessionRow="true"][droppable="false"],
+QListWidget#session_list::item {
+  border: none;
 }
 
 /* - les tooltips */
@@ -580,7 +590,6 @@ QListWidget#session_list QWidget#sessionRows QToolTip,
 }
 
 /* - Boutons édit / suppr -- */
-
 QLineEdit#session_name_edit {
   color: /*Text*/;
   min-width: 250px;
@@ -681,10 +690,11 @@ QWidget#console_overlay QToolTip {
   font-size: 16px;
 }
 
-QToolTip {
+QToolTip,
+#llm_status_indicator QToolTip {
   outline: none;
   /* background: transparent; */
-  background-color: /*Text2*/;
+  background-color: /*Text2*/ !important;
   color: /*Base*/;
   border: 2px solid /*Warning*/;
   font-size: 16px;
@@ -870,21 +880,34 @@ QRadioButton#rb_rag {
   padding: 2px 8px 2px 2px;
   margin: 2px 0px 2px 2px;
   font-weight: bold;
-  border: none;
-}
-QRadioButton#rb_off:hover,
-QRadioButton#rb_full:hover,
-QRadioButton#rb_rag:hover {
-  color: /*Accent*/;
+  border: 1px solid transparent;
+  min-width: 40px;
 }
 QRadioButton#rb_off:checked,
 QRadioButton#rb_full:checked,
 QRadioButton#rb_rag:checked {
   background-color: /*Danger*/;
-  color: /*Text2*/;
+  color: /*Text*/;
   border-radius: 8px;
-  padding: 2px 11px 2px 2px;
+  padding: 2px 8px 2px 2px;
   margin: 0px 0px;
+}
+QRadioButton#rb_off:!checked,
+QRadioButton#rb_full:!checked,
+QRadioButton#rb_rag:!checked {
+  color: /*Text1*/;
+  border-radius: 8px;
+  padding: 2px 8px 2px 2px;
+  margin: 0px 0px;
+}
+QRadioButton#rb_off:hover:!checked,
+QRadioButton#rb_full:hover:!checked,
+QRadioButton#rb_rag:hover:!checked {
+  color: /*Accent*/;
+  border: 1px solid /*Accent*/ ;
+  padding: 2px 8px 2px 2px;
+  margin: 0px 0px;
+  border-radius: 8px;
 }
 QRadioButton#rb_off::indicator,
 QRadioButton#rb_full::indicator,
@@ -1260,9 +1283,9 @@ QTabBar {
 }
 
 QTabBar::tab {
-    background: transparent;
+    background-color: transparent;
     color: white;
-    border: 1px solid transparent;
+    border: 2px solid transparent;
     padding: 4px 8px;
     margin: 0px;
     border-top-left-radius: 4px;
@@ -1271,7 +1294,7 @@ QTabBar::tab {
 }
 
 QTabBar::tab:selected {
-    background: /*Warning*/;
+    background-color: /*Warning*/;
     color: /*Text2*/;
     border: 2px solid /*Danger*/;
     border-bottom: none;
@@ -1294,11 +1317,12 @@ QTabBar::tab:disabled {
 }
 
 /* le panneau d'edition de la config */
-QDialog#config_edit QTextEdit#config_tab_text_ed,
+
+QTextEdit#config_tab_text_ed,
 QDialog#validation_dialog QTextEdit#validation_editor {
   border:none;
   outline:none;
-  background: /*Base*/;
+  background-color: /*Base*/;
   color: /*Text*/;
   font-size: 16px;
 }
@@ -1336,8 +1360,9 @@ QWidget#ConfigFormContainer QLineEdit#config_tab_name_ed {
   border: 2px solid /*Warning*/;
   color: /*Text*/;
   background: /*Base*/;
-  padding: 2px;
+  padding: 4px;
   font-size: 14px;
+  margin: 4px;
 }
 
 QWidget#ConfigFormContainer {
@@ -1386,11 +1411,11 @@ QDialog QPushButton[text="Cancel"] {
   color: /*Text2*/;
 }
 
-QDialog QLabel {
+QDialog QLabel#config_tab_name {
   color: /*Text*/;
 }
 
-QDialog QLineEdit {
+QDialog QLineEdit#config_tab_name_ed {
   color: /*Text*/;
   outline : none;
   border: 1px solid /*Text1*/;
@@ -1648,4 +1673,8 @@ QTextBrowser::selection {
   background-color: /*Accent*/; /* fallback sélection standard */
 }
 
-
+/* style des menus contextuels */
+QMenu#chatTextMenu {
+  background-color: /*Base1*/;
+  color: /*Text1*/; 
+}

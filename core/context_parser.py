@@ -48,9 +48,7 @@ class ParserConfig:
 
     def __init__(self, config_path: Optional[Path] = None, config_name: Optional[str] = None):
         # fichier json à côté du module
-        self.config_path = Path(
-            config_path or Path(__file__).parent / "context_parser_config.json"
-        )
+        self.config_path = Path(config_path or Path(__file__).parent / "context_parser_config.json")
         self.config_name = config_name or self.DEFAULT_CONFIG_NAME
         if not self.config_path.exists():
             self._write_defaults()
@@ -254,8 +252,7 @@ class ContextParser(ParserConfig):
         If the number of files exceeds `self.max_files':
 
         * `raise_on_limit = true` → will raise` toomanyfileserror '(current logic)
-        * `raise_on_limit = false` → will only return
-          `Self.max_files" first files (all the others are truncated).
+        * `raise_on_limit = false` → will only return `Self.max_files" first files (all the others are truncated).
         """
         base = Path(base_dir)
         git_pats = self._read_gitignore(base)
@@ -304,9 +301,7 @@ class ContextParser(ParserConfig):
         prev_tok = tokenize.INDENT
         last_row, last_col = -1, 0
 
-        for toktype, tok, (srow, scol), (erow, ecol), _ in tokenize.generate_tokens(
-            io_obj.readline
-        ):
+        for toktype, tok, (srow, scol), (erow, ecol), _ in tokenize.generate_tokens(io_obj.readline):
             if toktype == tokenize.COMMENT:
                 continue
             if toktype == tokenize.STRING and prev_tok in (tokenize.INDENT, tokenize.NEWLINE):

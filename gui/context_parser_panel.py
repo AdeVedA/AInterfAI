@@ -171,7 +171,7 @@ class ContextBuilderPanel(QWidget):
         h_switch.setSpacing(0)
 
         # Création des trois RadioButtons
-        self.rb_off = QRadioButton("OFF", self)
+        self.rb_off = QRadioButton("❌OFF", self)
         self.rb_off.setObjectName("rb_off")
         self.rb_off.setCursor(Qt.CursorShape.PointingHandCursor)
         self.rb_off.setToolTip("normal chat without context sent other than chat history")
@@ -312,6 +312,16 @@ class ContextBuilderPanel(QWidget):
         self._btn_none = btn_none
         self._btn_gen = btn_gen
 
+        self._off_disable_widgets = [
+            self.path_combo,
+            self._btn_browse,
+            self.tree,
+            self._btn_all,
+            self._btn_none,
+            self._btn_cfg,
+            self._btn_gen,
+        ]
+
     def _build_rag_ui(self):
         """Builds specific controls for RAG mode, invisible by default."""
         # Bouton vectorisation
@@ -319,7 +329,6 @@ class ContextBuilderPanel(QWidget):
         self._btn_rag_vectorize.setObjectName("context_btn_vectorize")
         self._btn_rag_vectorize.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_rag_vectorize.setToolTip("Start the vectorization of your file selection")
-        self._btn_rag_vectorize.hide()
 
         # Spinner simplifié (icône de recharge)
         # self._lbl_spinner = QLabel("🔄", self)
@@ -328,14 +337,12 @@ class ContextBuilderPanel(QWidget):
             object_name="rag_spinner",
             style="",
         )
-        self._lbl_spinner.hide()
         self._analyse_spinner = create_spinner(text="Scanning files ...", object_name="scan_spinner", style="")
         self._analyse_spinner.hide()
 
         # Message de statut
         self._lbl_rag_status = QLabel("", self)
         self._lbl_rag_status.setObjectName("vectorized")
-        self._lbl_rag_status.hide()
 
         # Paramètres RAG : K et chunk_size + rafraîchir
         self._sb_k = QSpinBox(self)
@@ -343,14 +350,14 @@ class ContextBuilderPanel(QWidget):
         self._sb_k.setRange(1, 100)
         self._sb_k.setValue(int(self._rag_config.k))
         self._sb_k.setToolTip("Number of chunks to recover")
-        self._sb_k.hide()
+
         self._sb_k.valueChanged.connect(self._on_k_changed)
         self._sb_chunk = QSpinBox(self)
         self._sb_chunk.setObjectName("sb_chunk")
         self._sb_chunk.setRange(100, 5000)
         self._sb_chunk.setValue(int(self._rag_config.chunk_size))
         self._sb_chunk.setToolTip("Chunks size")
-        self._sb_chunk.hide()
+
         self._sb_chunk.valueChanged.connect(self._on_chunk_changed)
 
         self._btn_refresh_index = QPushButton("Refresh the index", self)
@@ -447,6 +454,11 @@ class ContextBuilderPanel(QWidget):
         active = mode in (1, 2)
         # activer/désactiver tout
         self.path_combo.setEnabled(active)
+
+        # Désactive ou active tous les widgets sauf le titre si OFF
+        for w in self._off_disable_widgets:
+            w.setEnabled(active)
+
         if not active:
             self.path_combo.clear()
             self.tree.clear()
@@ -624,7 +636,8 @@ class ContextBuilderPanel(QWidget):
         self._btn_none.setEnabled(True)
         self._btn_gen.setEnabled(self.get_context_mode() == 1)
 
-        base = Path(self.path_combo.currentText())
+        base = Path(self.path_combo.currentText()).resolve()
+
         # 1) Récupérer la liste des fichiers cochés AVANT de tout vider :
         prev_checked = set(self.selected_files())
 
@@ -633,14 +646,17 @@ class ContextBuilderPanel(QWidget):
         self.tree.clear()
         self.folder_items.clear()
         # Initialement, TOUS les dossiers sont ouverts
-        self.expanded = set(p.parent for p in files) | {base}
+        self.expanded = {p.parent for p in files if p.is_relative_to(base)} | {base}
 
         # Grouper par parent
         from collections import defaultdict
 
-        by_parent = defaultdict(list)
+        by_parent: defaultdict[Path, list[Path]] = defaultdict(list)
         for f in files:
-            by_parent[f.parent].append(f)
+            if f.is_relative_to(base):
+                by_parent[f.parent].append(f)
+            else:
+                continue
 
         # Ordre des parents : base d'abord, puis les autres triés
         parents = list(by_parent.keys())

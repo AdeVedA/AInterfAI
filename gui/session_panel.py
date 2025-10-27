@@ -32,6 +32,7 @@ class SessionListWidget(QListWidget):
         super().__init__(parent)
         self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self.setDragEnabled(True)
+        self.setProperty("dragging", False)
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(True)
         # Active l'auto-scroll quand on drague près du haut/bas
@@ -40,7 +41,7 @@ class SessionListWidget(QListWidget):
         self.verticalScrollBar().setSingleStep(30)  # vitesse d’autoscroll
 
         self._last_highlight = None
-        # === ligne de dépôt ===
+        # === ligne de dépôt entre objets sessions/folder ===
         self._drop_line = QFrame(self.viewport())
         self._drop_line.setFrameShape(QFrame.Shape.HLine)
         self._drop_line.setFrameShadow(QFrame.Shadow.Plain)
@@ -93,7 +94,10 @@ class SessionListWidget(QListWidget):
         if not md.hasFormat("application/x-session-id"):
             return super().dragMoveEvent(event)
 
-        # Highlight personnalisé
+        self.setProperty("dragging", True)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
         pos = event.position().toPoint()
         idx = self.indexAt(pos)
 
@@ -104,11 +108,11 @@ class SessionListWidget(QListWidget):
             self._last_highlight.style().polish(self._last_highlight)
             self._last_highlight = None
 
-        # 2. Aucun item sous le curseur → ligne viewport (racine) ---
+        # 2. Aucun item sous le curseur -> ligne viewport (racine)
         if not idx.isValid():
             self._drop_line.setGeometry(4, pos.y() - 1, self.viewport().width() - 8, 2)
             self._drop_line.show()
-            self._drop_mode = "above"  # on dépose à la racine
+            self._drop_mode = "above"  # on dépose en haut de la racine
             self._drop_target = None
             QAbstractItemView.dragMoveEvent(self, event)
             event.accept()
@@ -117,8 +121,8 @@ class SessionListWidget(QListWidget):
         # 3. Un item est sous le curseur
         item = self.item(idx.row())
         rect = self.visualRect(idx)  # rectangle de l’item dans le viewport
-        top_zone = rect.top() + int(0.10 * rect.height())  # + 10 % du haut
-        bottom_zone = rect.bottom() - int(0.10 * rect.height())  # + 10 % du bas
+        top_zone = rect.top() + int(0.20 * rect.height())  # 20 % du haut
+        bottom_zone = rect.bottom() - int(0.20 * rect.height())  # 20 % du bas
 
         if pos.y() < top_zone:  # curseur dans la zone haute → INSERT BEFORE
             line_y = rect.top()
@@ -128,7 +132,7 @@ class SessionListWidget(QListWidget):
             line_y = rect.bottom()
             self._drop_mode = "below"
             self._drop_target = item
-        else:  # zone centrale → on garde le highlight habituel
+        else:  # zone centrale -> on garde le highlight
             self._drop_mode = None
             self._drop_target = item
             self._drop_line.hide()
@@ -161,12 +165,10 @@ class SessionListWidget(QListWidget):
         3. Emits the signal move_to_folder
         4. Cleans the deposit indicator
         """
-        # Vérifier si l'élément glissé contient bien le format MIME attendu
         md = event.mimeData()
         if not md.hasFormat("application/x-session-id"):
             return event.ignore()
 
-        # cache la ligne
         self._drop_line.hide()
         if self._last_highlight:
             self._last_highlight.setProperty("droppable", False)
@@ -188,10 +190,10 @@ class SessionListWidget(QListWidget):
             if self._drop_mode is None:
                 # DROP ON ITEM
                 if is_folder:
-                    # drop sur le dossier lui‑même  → on veut le mettre dans ce dossier
+                    # drop sur le dossier lui‑même  -> on veut le mettre dans ce dossier
                     target_folder_id = self._drop_target.data(Qt.ItemDataRole.UserRole)
                 else:
-                    # drop sur une session → on crée UN NOUVEAU dossier contenant les deux
+                    # drop sur une session -> on crée UN NOUVEAU dossier contenant les deux
                     target_folder_id = None
                     target_session_id = self._drop_target.data(Qt.ItemDataRole.UserRole)
             else:
@@ -215,15 +217,25 @@ class SessionListWidget(QListWidget):
     def dragLeaveEvent(self, event):
         # cache la ligne
         self._drop_line.hide()
+
+        self.setProperty("dragging", False)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
         for i in range(self.count()):
             widget = self.itemWidget(self.item(i))
-            if widget:
-                widget.setProperty("droppable", False)
-                widget.style().unpolish(widget)
-                widget.style().polish(widget)
+            if widget is None:
+                continue
+            widget.setProperty("droppable", False)
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
+
         if self._last_highlight:
-            self._last_highlight.setStyleSheet("")
+            self._last_highlight.setProperty("droppable", False)
+            self._last_highlight.style().unpolish(self._last_highlight)
+            self._last_highlight.style().polish(self._last_highlight)
             self._last_highlight = None
+
         super().dragLeaveEvent(event)
 
 
@@ -448,7 +460,7 @@ class SessionPanel(QWidget):
 
         btn_del = QToolButton()
         btn_del.setObjectName("btnDeleteFolder")
-        btn_del.setText("🗑️")
+        btn_del.setText("❌")
         btn_del.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_del.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         btn_del.setAutoRaise(True)
@@ -500,6 +512,7 @@ class SessionPanel(QWidget):
         h.setSpacing(0)  # Réduit l'espacement à 0
 
         lbl = QLabel(sess.session_name)
+        lbl.setObjectName("sessionLabel")
         lbl.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         lbl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         lbl.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
@@ -518,7 +531,7 @@ class SessionPanel(QWidget):
 
         btn_d = QToolButton()
         btn_d.setObjectName("btnDeleteSession")
-        btn_d.setText("🗑️")
+        btn_d.setText("❌")
         btn_d.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_d.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         btn_d.setAutoRaise(True)
