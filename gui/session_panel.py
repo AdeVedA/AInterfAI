@@ -124,11 +124,11 @@ class SessionListWidget(QListWidget):
         top_zone = rect.top() + int(0.20 * rect.height())  # 20 % du haut
         bottom_zone = rect.bottom() - int(0.20 * rect.height())  # 20 % du bas
 
-        if pos.y() < top_zone:  # curseur dans la zone haute → INSERT BEFORE
+        if pos.y() < top_zone:  # curseur dans la zone haute -> INSERT BEFORE
             line_y = rect.top()
             self._drop_mode = "above"
             self._drop_target = item
-        elif pos.y() > bottom_zone:  # zone basse → INSERT AFTER
+        elif pos.y() > bottom_zone:  # zone basse -> INSERT AFTER
             line_y = rect.bottom()
             self._drop_mode = "below"
             self._drop_target = item
@@ -277,7 +277,7 @@ class SessionPanel(QWidget):
         self.session_items_by_id = {}
         self._expanded_folders: set[int] = set()
         self._first_load = True
-        # Filtre actif ("Date", "Prompt-type" ou "LLM")
+        # Filtre actif ("Date", "Role-type" ou "LLM")
         self.current_filter = "Date"
         # Bouton de filtre
         filter_layout = QHBoxLayout()
@@ -287,14 +287,14 @@ class SessionPanel(QWidget):
         self.filter_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.filter_btn.setToolTip(
             "Filter your sessions by :\n- Date(with your folders)\n"
-            "- Prompt-type used in session's last message\n- LLM used in session's last message"
+            "- Role-type used in session's last message\n- LLM used in session's last message"
         )
         self.filter_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.filter_menu = QMenu(self)
         self.filter_menu.setObjectName("filter_menu")
         self.filter_menu.setCursor(Qt.CursorShape.PointingHandCursor)
         self.filter_menu.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        for label in ["Date", "Prompt-type", "LLM"]:
+        for label in ["Date", "Role-type", "LLM"]:
             # Créez le widget personnalisé
             widget = QWidget()
             widget_layout = QHBoxLayout(widget)
@@ -412,7 +412,7 @@ class SessionPanel(QWidget):
         h.setContentsMargins(0, 2, 0, 2)
         h.setSpacing(0)
 
-        if getattr(folder, "isHeader", False) or folder.id >= 1_000_000_000:  # faux dossiers -> catégorie Prompt / LLM
+        if getattr(folder, "isHeader", False) or folder.id >= 1_000_000_000:  # faux dossiers -> catégorie Rôle / LLM
             btn_title = QPushButton(folder.name)
             btn_title.setFlat(True)
             btn_title.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -494,7 +494,7 @@ class SessionPanel(QWidget):
                 break
 
         llm_name = last_llm.llm_name if last_llm else ""
-        prompt_type = last_llm.prompt_type if last_llm else ""
+        role_type = last_llm.role_type if last_llm else ""
 
         w = QWidget()
         w.setObjectName("sessionRows")
@@ -504,7 +504,7 @@ class SessionPanel(QWidget):
         w.setToolTip(
             f"{sess.session_name}\n"
             f"last message's LLM: {llm_name}\n"
-            f"last message's Prompt/Role: {prompt_type}\n"
+            f"last message's Role: {role_type}\n"
             f"{sess.created_at.strftime("%Y/%m/%d %H:%M")}"
         )
         h = QHBoxLayout(w)
@@ -550,7 +550,7 @@ class SessionPanel(QWidget):
         """
         Loads in self.session_list :
         - filter_type == 'Date' : grouped by folders
-        - filter_type in ('Prompt-type','LLM'): grouped by category
+        - filter_type in ('Role-type','LLM'): grouped by category
         """
         self.session_list.clear()
         # self._expanded_folders.clear()
@@ -595,14 +595,12 @@ class SessionPanel(QWidget):
                 self.session_list.addItem(item)
                 self.session_list.setItemWidget(item, item._widget)
 
-        # == Mode Prompt/LLM ==
+        # == Mode Rôle/LLM ==
         else:
             for category, sess_list in sessions_by_category.items():
                 key = str(category or "Inconnu").strip()
                 fake_id = 1_000_000_000 + abs(hash("CAT::" + key))
-                folder = Folder(
-                    id=fake_id, name=(f"📋 {key.upper()}" if filter_type == "Prompt-type" else f"🤖 {key.upper()}")
-                )
+                folder = Folder(id=fake_id, name=(f"📋 {key.upper()}" if filter_type == "Role-type" else f"🤖 {key.upper()}"))
                 setattr(folder, "isHeader", True)
 
                 header = self._create_folder_item(folder)
@@ -630,8 +628,8 @@ class SessionPanel(QWidget):
         """
         Apply the chosen filter:
         - For 'Date': display by folders and date (via load_ssion with list)
-        - For 'prompt': display by prompt_type (via load_ssion with dict)
-        - For 'llm': display by llm_name (via load_ssion with dict)
+        - For 'Role-type': display by role_type (via load_ssion with dict)
+        - For 'LLM': display by llm_name (via load_ssion with dict)
         """
         # 1) Met à jour le texte du bouton
         self.current_filter = filter_type
@@ -643,7 +641,7 @@ class SessionPanel(QWidget):
         # 3) Vide la liste actuelle et cache/montre les boutons selon le besoin
         #    On a bien self.session_list (pas clear_session_list)
         self.session_list.clear()
-        if filter_type in ("Prompt-type", "LLM"):
+        if filter_type in ("Role-type", "LLM"):
             self.btn_folder.setDisabled(True)
             self.btn_new.setDisabled(True)
         else:
@@ -651,7 +649,7 @@ class SessionPanel(QWidget):
             self.btn_new.setDisabled(False)
 
         # 4) Recharge la vue en passant dossiers + résultat filtré
-        #    load_sessions gère à la fois les dict (Prompt/LLM) et les list (Date)
+        #    load_sessions gère à la fois les dict (Role/LLM) et les list (Date)
         folders = self.session_manager.list_folders()
         self.load_sessions(folders, result, filter_type)
 
@@ -749,7 +747,7 @@ class SessionPanel(QWidget):
 
     def _toggle_folder(self, folder_id: int):
         """
-        Open/Close a folder (parent session) or a filter category (prompt / LLM).
+        Open/Close a folder (parent session) or a filter category (Role / LLM).
         """
         open_now = folder_id not in self._expanded_folders
         if open_now:

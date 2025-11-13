@@ -73,9 +73,9 @@ class ContextConfigDialog(QDialog):
         for name, content in self.parser._cfg_dict.get("configs", {}).items():
             self._add_tab(name, content)
         # select active
-        names = list(self.parser._cfg_dict["configs"].keys())
-        if self.parser.config_name in names:
-            idx = names.index(self.parser.config_name)
+        self.config_names = list(self.parser._cfg_dict["configs"].keys())
+        if self.parser.config_name in self.config_names:
+            idx = self.config_names.index(self.parser.config_name)
             self.tabs.setCurrentIndex(idx)
 
         btn_add = QPushButton("➕ Add Config")
@@ -144,17 +144,20 @@ class ContextConfigDialog(QDialog):
     def restore_defaults(self) -> None:
         """Restore default values for the currently active configuration tab."""
         current_index = self.tabs.currentIndex()
-        if current_index < 0 or current_index >= len(self.tab_widgets):
+        if current_index < 0 or current_index >= len(self.tabs):
             return
 
-        current_tab = self.tab_widgets[current_index]
+        current_tab = self.tabs.widget(current_index)
         config_name = self.config_names[current_index]
 
         # Récupération des valeurs par défaut depuis ParserConfig
-        defaults = ParserConfig.get_default_config(config_name)
+        defaults = ParserConfig(config_name=config_name).get_default_config(config_name=config_name)
 
         # Mise à jour des champs dans le widget
-        current_tab.set_values(defaults)
+        # current_tab.set_values(defaults)
+        text_edit = current_tab.findChild(QTextEdit)
+        if text_edit:
+            text_edit.setPlainText(json.dumps(defaults, indent=2))
 
     def select_config(self, name: str):
         """Programmatically select a tab by name."""

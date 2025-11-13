@@ -26,7 +26,10 @@ def create_spinner(
         # spinner steps
         frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 
-    lbl = QLabel(f"   {frames[0]} {text}")
+    # mutable holder pour le message actuel
+    msg = {"txt": text}
+
+    lbl = QLabel(f"   {frames[0]} {msg['txt']}")
     lbl.setObjectName(object_name)
     if style:
         lbl.setStyleSheet(style)
@@ -37,10 +40,16 @@ def create_spinner(
 
     def _update():
         spinner_index["i"] = (spinner_index["i"] + 1) % len(frames)
-        lbl.setText(f"   {frames[spinner_index['i']]} {text}")
+        lbl.setText(f"   {frames[spinner_index['i']]} {msg['txt']}")
 
     timer.timeout.connect(_update)
     timer.start(interval)
+
+    # API pour changer le text affiché pendant que le spinner fonctionne
+    def set_message(new_text: str) -> None:
+        msg["txt"] = new_text
+
+    lbl.setMessage = set_message
 
     # pour stopper l'animation
     def stop_spinner():

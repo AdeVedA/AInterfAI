@@ -12,7 +12,7 @@ class TooManyFilesError(RuntimeError):
 class AnalyzeWorker(QObject):
     """Worker executed in a Qthread, without any dependence on the panel."""
 
-    finished = pyqtSignal(list)  # list[Path] → envoyé quand le scan a réussi
+    finished = pyqtSignal(list)  # list[Path] -> envoyé quand le scan a réussi
     error = pyqtSignal(str)  # message d'erreur (incl. TooManyFilesError)
 
     def __init__(self, parser=None, root: Path = None, forced_limit: bool = False):

@@ -25,9 +25,7 @@ class SessionManager:
         Return all sessions ordered by creation date descending.
         """
         # print("Listing sessions...")
-        sessions = (
-            self.db.query(Session).order_by(Session.created_at.desc(), Session.id.desc()).all()
-        )
+        sessions = self.db.query(Session).order_by(Session.created_at.desc(), Session.id.desc()).all()
         # print(f"Sessions récupérées : {sessions}")
         return sessions
 
@@ -53,7 +51,7 @@ class SessionManager:
 
     def filter_sessions(self, filter_type: str) -> dict[str, list[Session]]:
         """
-        Return a dict mapping in each category (prompt_type or llm_name)
+        Return a dict mapping in each category (role_type or llm_name)
         to the list of corresponding sessions, sorted by Timetamp descending
         from the last LLM message.
 
@@ -77,7 +75,7 @@ class SessionManager:
 
         # Join pour récupérer la valeur de la clé triée
         rows = (
-            self.db.query(Session, Message.llm_name, Message.prompt_type, last_llm_ts.c.last_ts)
+            self.db.query(Session, Message.llm_name, Message.role_type, last_llm_ts.c.last_ts)
             .join(last_llm_ts, Session.id == last_llm_ts.c.session_id)
             .join(
                 Message,
@@ -88,13 +86,13 @@ class SessionManager:
         )
 
         # Ordonner par la colonne demandée, puis par date desc
-        key_col = Message.prompt_type if filter_type == "Prompt-type" else Message.llm_name
+        key_col = Message.role_type if filter_type == "Role-type" else Message.llm_name
         ordered = rows.order_by(key_col, last_llm_ts.c.last_ts.desc()).all()
 
         # Regrouper dans un dict { clé -> [Session, ...] }
         grouped: dict[str, list[Session]] = defaultdict(list)
-        for sess, llm_name, prompt_type, _ in ordered:
-            key = prompt_type if filter_type == "Prompt-type" else llm_name
+        for sess, llm_name, role_type, _ in ordered:
+            key = role_type if filter_type == "Role-type" else llm_name
             grouped[key].append(sess)
         # print("Grouped sessions:", {k: len(v) for k, v in grouped.items()})
         return dict(grouped)
@@ -123,7 +121,7 @@ class SessionManager:
         sender: str,
         content: str,
         llm_name: str = None,
-        prompt_type: str = None,
+        role_type: str = None,
         config_id: int = None,
     ) -> Message:
         """
@@ -135,7 +133,7 @@ class SessionManager:
         # Pour les messages LLM, on complète les métadonnées
         kwargs = {}
         if sender == "llm":
-            kwargs = dict(llm_name=llm_name, prompt_type=prompt_type, config_id=config_id)
+            kwargs = dict(llm_name=llm_name, role_type=role_type, config_id=config_id)
         msg = Message(session_id=session_id, sender=sender, content=content, **kwargs)
         self.db.add(msg)
         self.db.commit()

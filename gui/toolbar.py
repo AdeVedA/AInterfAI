@@ -6,6 +6,8 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
     QComboBox,
+    QDialog,
+    QHBoxLayout,
     QInputDialog,
     QLabel,
     QMenu,
@@ -20,6 +22,9 @@ from PyQt6.QtWidgets import (
 
 from core.theme.color_palettes import COLOR_PALETTES
 from core.theme.theme_manager import GUI_CONFIG_PATH, get_current_theme, set_current_theme
+from gui.model_sync_worker import ModelSyncWorker
+from gui.widgets.model_diff_dialog import ModelDiffDialog
+from gui.widgets.spinner import create_spinner
 
 from .widgets.status_indicator import create_status_indicator
 
@@ -27,36 +32,36 @@ from .widgets.status_indicator import create_status_indicator
 # ToolBar : System prompt, paramètres LLM, read & update config
 class Toolbar(QToolBar):
     """
-    Application toolbar containing setup/themes menu, LLM selection, prompt selection,
+    Application toolbar containing setup/themes menu, LLM selection, Role selection,
     and toggles for Session, Context and Config panels.
     Signals:
         toggle_llm : Emitted when button "Load LLM" is clicked on
         llm_changed(str): Emitted when the selected LLM changes.
-        prompt_changed(str): Emitted when the selected prompt/role changes.
-        new_prompt(str, str): Emitted when a new prompt/role is defined
+        role_changed(str): Emitted when the selected Role changes.
+        new_role(str, str): Emitted when a new Role is defined
         toggle_sessions(bool): Show/hide sessions panel.
+        toggle_chat_alone(bool): Show only chat panel/show all panels
         toggle_context(bool): Show/hide context panel.
         toggle_config(bool): Show/hide config panel.
-        load_prompt : Emitted for charging selected prompt/llm
         theme_changed(str): Emitted when theme changed
     """
 
     toggle_llm = pyqtSignal()
     llm_changed = pyqtSignal(str)
-    prompt_changed = pyqtSignal(str)
-    new_prompt = pyqtSignal(str, str)
+    role_changed = pyqtSignal(str)
+    new_role = pyqtSignal(str, str)
     toggle_sessions = pyqtSignal(bool)
     toggle_chat_alone = pyqtSignal(bool)
     toggle_context = pyqtSignal(bool)
     toggle_config = pyqtSignal(bool)
-    load_prompt = pyqtSignal()
     theme_changed = pyqtSignal(str)
 
-    def __init__(self, parent=None, theme_manager=None, llm_manager=None, prompt_config_manager=None):
+    def __init__(self, parent=None, theme_manager=None, llm_manager=None, role_config_manager=None, thread_manager=None):
         super().__init__(parent)
         self.theme_manager = theme_manager
         self.llm_manager = llm_manager
-        self.prompt_config_manager = prompt_config_manager
+        self.role_config_manager = role_config_manager
+        self.thread_manager = thread_manager
         self.setObjectName("main_toolbar")
         self.setContentsMargins(0, 0, 0, 4)
         # la barre d'outil ne peut plus être déplacée
@@ -75,6 +80,8 @@ class Toolbar(QToolBar):
         # Menu du bouton Settings
         settings_menu = QMenu(self)
         settings_menu.setObjectName("setupMenu")
+        settings_menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        settings_menu.setWindowFlags(settings_menu.windowFlags() | Qt.WindowType.FramelessWindowHint)
         settings_menu.setToolTipsVisible(True)
 
         # récupérer le theme actif
@@ -130,6 +137,9 @@ class Toolbar(QToolBar):
             self.theme_menu.addAction(action)
             self.theme_actions[theme] = (action, widget)  # Stockez pour mise à jour
 
+        # Separateur
+        settings_menu.addSeparator()
+
         # Afficher la boite de dialogue -modifiable- de requête (avec historique/contexte/RAG)
         self.show_query_dialog = True
         self.action_show_query = QAction("Show Final Query Dialog before sending", self, checkable=True)
@@ -151,6 +161,8 @@ class Toolbar(QToolBar):
         self.action_generate_title.toggled.connect(self.set_generate_title)
         settings_menu.addAction(self.action_generate_title)
 
+        settings_menu.addSeparator()
+
         # plage temporelle de disponibilité du LLM en mémoire - keep_alive timeout (en minutes, 0 = jamais déchargé)
         self.action_keep_alive = QAction("", self)
         self.action_keep_alive.setToolTip(
@@ -171,7 +183,14 @@ class Toolbar(QToolBar):
         )
         settings_menu.addAction(self.action_poll_interval)
 
-        # Separateur
+        # Rafraichir la table LLM properties en les synchronisant avec Ollama
+        self.action_sync_models = QAction("Add Model/Refresh Model Properties", self)
+        self.action_sync_models.setToolTip(
+            "Synchronizes the LLM properties table\n" "Will insert missing models and, if you choose, let you review changes."
+        )
+        settings_menu.addAction(self.action_sync_models)
+        self.action_sync_models.triggered.connect(self._on_refresh_clicked)
+
         settings_menu.addSeparator()
 
         # Rafraichir l'UI avec le QSS themes.qss
@@ -230,35 +249,35 @@ class Toolbar(QToolBar):
 
         # prompt type button/menus
         prompt_tooltip = (
-            "Type of role/system prompt and (hyper-)parameters config for your LLM .\n"
+            "Type of Role (system prompt and inference parameters) config for your LLM .\n"
             "Default Load : On first start the system loads the default role and parameters for your LLM.\n"
             "Customization : Adjust the role or change the hyper-parameters to suit your needs. "
             "The defaults will change according to the LLM you choose.\n"
             "Save Configuration : Click Save Config to persist the current setting. "
             "The selected role and LLM, together with the system prompt and any modified parameters, will be stored.\n"
             "Add or Edit : Create a new custom role with + New Role or "
-            "edit the JSON file directly at core\\prompt_config_defaults.json (and relaunch app in this case)."
+            "edit the JSON file directly at core\\role_config_defaults.json (and relaunch app in this case)."
         )
         self.prompt_label = QLabel("Role :")
         self.prompt_label.setObjectName("toolbar_prompt_label")
         self.prompt_label.setToolTip(prompt_tooltip)
 
-        self.prompt_button = QPushButton(self)
-        self.prompt_button.setObjectName("toolbar_prompt_button")
-        self.prompt_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.prompt_button.setToolTip(prompt_tooltip)
-        self.prompt_button.setMinimumWidth(140)
-        self.prompt_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
-        self.prompt_button.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+        self.role_button = QPushButton(self)
+        self.role_button.setObjectName("toolbar_role_button")
+        self.role_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.role_button.setToolTip(prompt_tooltip)
+        self.role_button.setMinimumWidth(140)
+        self.role_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        self.role_button.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
 
-        self.prompt_menu = QMenu(self)
-        self.prompt_menu.setObjectName("promptMenu")  # for QSS
-        self.prompt_menu.setMinimumWidth(140)
-        self.prompt_menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.prompt_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
-        self.prompt_menu.setToolTipsVisible(True)
-        self.prompt_button.setMenu(self.prompt_menu)
-        # self.prompt_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.role_menu = QMenu(self)
+        self.role_menu.setObjectName("roleMenu")  # for QSS
+        self.role_menu.setMinimumWidth(140)
+        self.role_menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.role_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        self.role_menu.setToolTipsVisible(True)
+        self.role_button.setMenu(self.role_menu)
+        # self.role_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
 
         # aides internes
         self._prompt_flat_actions = []  # type: list[QAction]
@@ -266,16 +285,16 @@ class Toolbar(QToolBar):
         self._current_prompt_index = -1
 
         # Exposer les trois méthodes utilisées ailleurs
-        self.prompt_button.findText = self._prompt_find_text
-        self.prompt_button.setCurrentIndex = self._prompt_set_index
-        self.prompt_button.currentText = self._prompt_current_text_func
+        self.role_button.findText = self._prompt_find_text
+        self.role_button.setCurrentIndex = self._prompt_set_index
+        self.role_button.currentText = self._prompt_current_text_func
 
         # construire le menu hiérarchique
-        self.new_prompt_in_combo = "+ New Role"
-        self._build_prompt_menu()
+        self.new_role_in_combo = "+ New Role"
+        self._build_role_menu()
 
         self.addWidget(self.prompt_label)
-        self.addWidget(self.prompt_button)
+        self.addWidget(self.role_button)
 
         # Load Prompt button
         self.btn_load_llm = QPushButton("Load LLM", self)
@@ -306,19 +325,38 @@ class Toolbar(QToolBar):
         self.llm_label = QLabel("LLM :")
         self.llm_label.setObjectName("toolbar_llm_label")
         self.llm_label.setToolTip(llm_tooltip)
+        self.addWidget(self.llm_label)
+
+        # Dans ta méthode d'initialisation :
+        llm_container = QWidget()
+        llm_container.setObjectName("combo_button_container")
+        llm_layout = QHBoxLayout(llm_container)
+        llm_layout.setContentsMargins(0, 0, 0, 0)
+        llm_layout.setSpacing(0)
+
         self.llm_combo = QComboBox(self)
         self.llm_combo.setObjectName("toolbar_llm_combo")
+        self.llm_combo.setCursor(Qt.CursorShape.PointingHandCursor)
         self.llm_combo.setFrame(False)
         self.llm_combo.setToolTip(llm_tooltip)
         self.llm_combo.setMinimumContentsLength(13)
         self.llm_combo.setMaxVisibleItems(20)
-        self.addWidget(self.llm_label)
-        self.addWidget(self.llm_combo)
+
+        # Editer les paramètres par défaut du LLM
+        self.btn_edit_llm_params = QPushButton("🛠️", self)
+        self.btn_edit_llm_params.setObjectName("btn_edit_llm_params")
+        self.btn_edit_llm_params.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_edit_llm_params.setToolTip("Edit default parameters for the selected LLM")
+
+        llm_layout.addWidget(self.llm_combo)
+        llm_layout.addWidget(self.btn_edit_llm_params)
+        self.addWidget(llm_container)
 
         # Connecter signals
         settings_menu.aboutToShow.connect(self._refresh_settings_actions)
         self.btn_load_llm.clicked.connect(self.toggle_llm.emit)
         self.llm_combo.currentTextChanged.connect(self.llm_changed)
+        self.btn_edit_llm_params.clicked.connect(self._on_edit_llm_deflt_params_clicked)
         self.btn_toggle_sessions.toggled.connect(self.toggle_sessions)
         self.btn_toggle_chat_alone.toggled.connect(self.toggle_chat_alone)
         self.btn_toggle_context.toggled.connect(self.toggle_context)
@@ -332,7 +370,7 @@ class Toolbar(QToolBar):
         return -1
 
     def _prompt_set_index(self, idx: int) -> None:
-        """Select the action at idx (emits prompt_changed)."""
+        """Select the action at idx (emits role_changed)."""
         if 0 <= idx < len(self._prompt_flat_actions):
             self._prompt_flat_actions[idx].trigger()
 
@@ -341,16 +379,16 @@ class Toolbar(QToolBar):
         return self._prompt_current_text
 
     def set_language(self, lang: str):
-        """Change la langue et reconstruit le menu de prompts."""
+        """Changes language et rebuild Roles menu."""
         self.current_language = lang
-        self.prompt_config_manager.set_current_language(lang)
-        self._build_prompt_menu()
+        self.role_config_manager.set_current_language(lang)
+        self._build_role_menu()
 
-    def _build_prompt_menu(self) -> None:
-        """Create a hierarchical QMenu for role/prompt configs, + "New Prompt", + prompts language switch"""
-        self.prompt_menu.clear()
+    def _build_role_menu(self) -> None:
+        """Create a hierarchical QMenu for Role configs, + "New Role", + Roles language switch"""
+        self.role_menu.clear()
         self._prompt_flat_actions.clear()
-        hierarchy = self.prompt_config_manager.get_hierarchy()
+        hierarchy = self.role_config_manager.get_hierarchy()
 
         def _html(txt: str) -> str:
             escaped = txt.replace("\n", "<br>")
@@ -367,7 +405,7 @@ class Toolbar(QToolBar):
 
                 if children:
                     # Créer submenu pour cette catégorie
-                    submenu = QMenu(category, self.prompt_menu)
+                    submenu = QMenu(category, self.role_menu)
                     submenu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
                     submenu.setObjectName("submenu_children")
                     submenu.setToolTipsVisible(True)
@@ -375,7 +413,7 @@ class Toolbar(QToolBar):
                     # Ajouter base prompt au submenu
                     base_action = QAction(name, submenu)
                     base_action.setToolTip(_html(descr))
-                    base_action.triggered.connect(functools.partial(self._prompt_action_triggered, name))
+                    base_action.triggered.connect(functools.partial(self._role_action_triggered, name))
                     submenu.addAction(base_action)
                     self._prompt_flat_actions.append(base_action)
 
@@ -383,26 +421,26 @@ class Toolbar(QToolBar):
                     for child_name, child_descr in children:
                         child_action = QAction(child_name, submenu)
                         child_action.setToolTip(_html(child_descr))
-                        child_action.triggered.connect(functools.partial(self._prompt_action_triggered, child_name))
+                        child_action.triggered.connect(functools.partial(self._role_action_triggered, child_name))
                         submenu.addAction(child_action)
                         self._prompt_flat_actions.append(child_action)
 
                     # Ajouter submenu au main menu
-                    submenu_action = QAction(category, self.prompt_menu)
+                    submenu_action = QAction(category, self.role_menu)
                     submenu_action.setMenu(submenu)
-                    self.prompt_menu.addAction(submenu_action)
+                    self.role_menu.addAction(submenu_action)
                 else:
                     # Base prompt sans children - ajouter directement à main menu
-                    base_action = QAction(name, self.prompt_menu)
+                    base_action = QAction(name, self.role_menu)
                     base_action.setToolTip(_html(descr))
-                    base_action.triggered.connect(functools.partial(self._prompt_action_triggered, name))
-                    self.prompt_menu.addAction(base_action)
+                    base_action.triggered.connect(functools.partial(self._role_action_triggered, name))
+                    self.role_menu.addAction(base_action)
                     self._prompt_flat_actions.append(base_action)
 
             # CAS 2: Pas base prompt, que des children
             elif children:
                 # Créer submenu pour children
-                submenu = QMenu(category, self.prompt_menu)
+                submenu = QMenu(category, self.role_menu)
                 submenu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
                 submenu.setObjectName("submenu_children")
                 submenu.setToolTipsVisible(True)
@@ -411,32 +449,32 @@ class Toolbar(QToolBar):
                 for child_name, child_descr in children:
                     child_action = QAction(child_name, submenu)
                     child_action.setToolTip(_html(child_descr))
-                    child_action.triggered.connect(functools.partial(self._prompt_action_triggered, child_name))
+                    child_action.triggered.connect(functools.partial(self._role_action_triggered, child_name))
                     submenu.addAction(child_action)
                     self._prompt_flat_actions.append(child_action)
 
                 # Ajouter submenu au main menu
-                submenu_action = QAction(category, self.prompt_menu)
+                submenu_action = QAction(category, self.role_menu)
                 submenu_action.setMenu(submenu)
-                self.prompt_menu.addAction(submenu_action)
+                self.role_menu.addAction(submenu_action)
 
         # Ajouter le séparateur et l'action "New Role"
-        self.prompt_menu.addSeparator()
-        new_prompt_action = QAction("+ New Role", self.prompt_menu)
-        new_prompt_action.setToolTip("Create a new role/system prompt/parameters default configuration")
-        new_prompt_action.triggered.connect(self._ask_for_new_prompt)
-        self.prompt_menu.addAction(new_prompt_action)
+        self.role_menu.addSeparator()
+        new_role_action = QAction("+ New Role", self.role_menu)
+        new_role_action.setToolTip("Create a new role/system prompt/parameters default configuration")
+        new_role_action.triggered.connect(self._ask_for_new_role)
+        self.role_menu.addAction(new_role_action)
 
         # Ajout menu de sélection de langue
-        self.prompt_menu.addSeparator()
+        self.role_menu.addSeparator()
         # détecter les langues disponibles
-        langs = self.prompt_config_manager.available_languages()
+        langs = self.role_config_manager.available_languages()
         if not hasattr(self, "current_language"):
             # première initialisation : anglais par défaut
-            self.current_language = self.prompt_config_manager.get_current_language()
+            self.current_language = self.role_config_manager.get_current_language()
 
         # créer le sous-menu parent
-        submenu_language = QMenu(f"Language: {self.current_language.upper()}", self.prompt_menu)
+        submenu_language = QMenu(f"Language: {self.current_language.upper()}", self.role_menu)
         submenu_language.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         submenu_language.setObjectName("submenu_children")
         submenu_language.setToolTipsVisible(True)
@@ -451,11 +489,11 @@ class Toolbar(QToolBar):
                 if not checked or code == self.current_language:
                     return
                 saved_index = self._current_prompt_index if hasattr(self, "_current_prompt_index") else -1
-                # recharger le PromptConfigManager avec la nouvelle langue
-                self.prompt_config_manager.load_language(code)
+                # recharger le RoleConfigManager avec la nouvelle langue
+                self.role_config_manager.load_language(code)
                 self.current_language = code
                 # reconstruire le menu
-                self._build_prompt_menu()
+                self._build_role_menu()
                 if 0 <= saved_index < len(self._prompt_flat_actions):
                     restore_index = saved_index
                 else:
@@ -466,22 +504,22 @@ class Toolbar(QToolBar):
             submenu_language.addAction(lang_action)
 
         # action parent qui ouvre le sous-menu
-        submenu_language_action = QAction(submenu_language.title(), self.prompt_menu)
+        submenu_language_action = QAction(submenu_language.title(), self.role_menu)
         submenu_language_action.setMenu(submenu_language)
-        self.prompt_menu.addAction(submenu_language_action)
+        self.role_menu.addAction(submenu_language_action)
 
         # les tooltip sont visibles
-        self.prompt_menu.setToolTipsVisible(True)
+        self.role_menu.setToolTipsVisible(True)
 
-    def _prompt_action_triggered(self, name: str) -> None:
+    def _role_action_triggered(self, name: str) -> None:
         """Called when a prompt/action is selected."""
         self._prompt_current_text = name
         self._current_prompt_index = self._prompt_find_text(name)
-        self.prompt_button.setText(f"  {name}")
-        self.prompt_changed.emit(name)
+        self.role_button.setText(f"  {name}")
+        self.role_changed.emit(name)
 
-    def _ask_for_new_prompt(self) -> None:
-        """Dialog to create a new prompt, then emit new_prompt."""
+    def _ask_for_new_role(self) -> None:
+        """Dialog to create a new prompt, then emit new_role."""
         name, ok = QInputDialog.getText(self, "Create a new prompt role", "Prompt role's name :")
         if not ok or not name.strip():
             return
@@ -491,7 +529,7 @@ class Toolbar(QToolBar):
             f"{name}'s default system prompt :",
         )
         if ok and sys_prompt.strip():
-            self.new_prompt.emit(name.strip(), sys_prompt.strip())
+            self.new_role.emit(name.strip(), sys_prompt.strip())
 
     def _refresh_settings_actions(self):
         # 1) LLM Keep-Alive
@@ -625,6 +663,138 @@ class Toolbar(QToolBar):
             QMessageBox.warning(self, "Error", str(e))
             print(f"Theme application error: {str(e)}")
 
+    def _on_edit_llm_deflt_params_clicked(self):
+        """User asked for edition of current selected LLM default parameters"""
+        model_name = self.llm_combo.currentText()
+        diff = self.llm_manager.props_mgr.edit_model_parameters(model_name)
+        print(diff)
+        updated_fields = []  # pour affichage des modèles updatés
+        dlg = ModelDiffDialog(diff, edit_mode=True, parent=self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            fields_new_values = dlg.get_edited_fields()  # dict typé
+            for k in fields_new_values.keys():
+                updated_fields.append(k)
+            if fields_new_values:
+                self.llm_manager.props_mgr.update_properties(model_name=model_name, field_value_dict=fields_new_values)
+        else:
+            return  # annulation utilisateur
+        if updated_fields:
+            updates_txt = "\n".join(updated_fields)
+            QMessageBox.information(
+                self,
+                "Model parameters edition finished",
+                f"LLM Properties for {model_name} have been updated :\n\n{updates_txt}",
+            )
+        else:
+            QMessageBox.information(
+                self,
+                "Refresh finished",
+                f"No LLM Properties for {model_name} to update.",
+            )
+
+    def _on_refresh_clicked(self):
+        """User asked for a manual refresh."""
+        # Demander si l'utilisateur veut un "full diff" ou juste “add missing model”
+        reply = QMessageBox.question(
+            self,
+            "Refresh mode",
+            "Do you want to review/select changes for existing models?\n"
+            "(Choosing 'No' will only add any newly-installed models.)",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        force_refresh = reply == QMessageBox.StandardButton.Yes
+
+        # worker dans un qthread
+        self.worker = ModelSyncWorker(
+            props_mgr=self.llm_manager.props_mgr,
+            force_refresh=force_refresh,
+        )
+        self.worker.progress.connect(self._show_progress)
+        self.worker.finished.connect(self._on_sync_finished)
+        self.thread_manager.start_qthread(self.worker)
+
+    def _show_progress(self, txt: str):
+        """Create a single spinner (or update its text) in the status bar."""
+        status_bar = self.parent().statusBar()
+        if hasattr(self, "_spinner") and self._spinner:
+            self._spinner.setMessage(txt)
+        else:
+            self._spinner = create_spinner(text=txt)
+            status_bar.addPermanentWidget(self._spinner)
+
+    def _kill_spinner(self):
+        """Stop the spinner and remove it from the status bar."""
+        if hasattr(self, "_spinner") and self._spinner:
+            try:
+                self._spinner.stop_spinner()
+            except Exception:
+                pass
+            finally:
+                self._spinner = None
+
+    def _on_sync_finished(self, diffs: list[dict]):
+        """
+        Called when ModelSyncWorker finishes.
+        *diffs* is a list produced by LLMPropertiesManager.sync_missing_and_refresh().
+        Each entry looks like:
+            {
+                "model":   <str>,
+                "new_data":<flat dict from Ollama>,
+                "diff":    {"field": (old, new), …}
+            }
+        """
+        if not diffs or diffs == []:
+            if hasattr(self, "_spinner") and self._spinner:
+                self._kill_spinner()
+            self.parent().statusBar().hide()
+            QMessageBox.information(self, "Refresh finished", "No changes detected.")
+            return
+        else:
+            if hasattr(self, "_spinner") and self._spinner:
+                self._kill_spinner()
+            self.parent().statusBar().hide()
+
+        updated_models = []  # pour affichage des modèles updatés
+        dlg = ModelDiffDialog(diffs, parent=self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            fields_to_update_per_model = dlg.selected_fields()
+            if fields_to_update_per_model:
+                for model, field_value_dict in fields_to_update_per_model.items():
+                    #  demander à écrire les colonnes sélectionnées
+                    self._apply_updates(
+                        model_name=model,
+                        field_value_dict=field_value_dict,
+                    )
+                    # un rapport pour chaque modèle updaté
+                    # self._show_progress(f"Updated {entry['model']}")
+                    updated_model = f"{model} : {[(field, value) for field, value in field_value_dict.items()]}"
+                    updated_models.append(updated_model)
+
+        # message final (rapport)
+        if updated_models:
+            updates_txt = "\n".join(updated_models)
+            QMessageBox.information(
+                self,
+                "Refresh finished",
+                f"LLM Properties have been updated :\n\n{updates_txt}",
+            )
+        else:
+            QMessageBox.information(
+                self,
+                "Refresh finished",
+                "No LLM Properties changes to update.",
+            )
+
+    def _apply_updates(self, model_name: str, field_value_dict: dict[str, str]) -> None:
+        """
+        Forward the update request to the core manager.
+        """
+        self.llm_manager.props_mgr.update_properties(
+            model_name=model_name,
+            field_value_dict=field_value_dict,
+        )
+
     def apply_qss(self):
         """Apply a QSS file to the application on the fly without restarting."""
         set_current_theme(get_current_theme())
@@ -661,6 +831,7 @@ class Toolbar(QToolBar):
             "paraphrase-multilingual",
             "granite-embedding",
             "embeddinggemma",
+            "qwen3-embedding",
         )
         for model in sorted_models:
             # on sort les embeddings de de notre liste de LLM

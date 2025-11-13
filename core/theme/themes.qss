@@ -181,12 +181,17 @@ QMenu#setupMenu::item {
 }
 QMenu#setupMenu::item:selected {
   background-color: /*Base1*/;
+  border-radius: 8px;
   color:  /*Accent*/;
 }
 QMenu#setupMenu::separator {
   height: 1px;
   background: /*Warning*/;
   margin: 6px 0;
+}
+QMenu#setupMenu::scroller {
+    background-color: transparent;
+    border: none;
 }
 
 QToolTip {
@@ -261,7 +266,7 @@ QWidget#spacerbetween {
   border: none;
 }
 
-/* bouton === LOAD AGENT === */
+/* bouton === LOAD LLM === */
 #toolbar_btn_load {
   background-color: /*Danger*/;
   color: /*Text2*/;
@@ -294,11 +299,11 @@ QComboBox {
   outline: none;
 }
 
-/* boutons === Prompt et LLM === */
+/* boutons === Role et LLM === */
 
 /* boutons dans la toolbar */
 
-QPushButton#toolbar_prompt_button {
+QPushButton#toolbar_role_button {
   background-color: /*Base*/;
   color: /*Text*/;
   text-align: left;
@@ -310,32 +315,31 @@ QPushButton#toolbar_prompt_button {
   /* min-width: 120px; */
 }
 
-QPushButton#toolbar_prompt_button::menu-indicator {
+QPushButton#toolbar_role_button::menu-indicator {
   image: none;
 }
 
-QMenu#promptMenu {
+QMenu#roleMenu {
   border: none;
   outline: none;
 }
 
 /* background colour of the whole drop-down */
-QMenu#promptMenu QAbstractItemView,
-QMenu#promptMenu {
+QMenu#roleMenu QAbstractItemView,
+QMenu#roleMenu {
   /* min-width: 80px; */
   selection-background-color: /*Accent*/;
 }
 
 /* les items dans les menus  */
 QComboBox#toolbar_llm_combo QAbstractItemView::item, 
-QMenu#promptMenu::item,
+QMenu#roleMenu::item,
 QMenu#submenu_children::item {
   background-color: /*Base*/;
   color: /*Text*/;
   font-size: 13px;
   font-weight: bold;
   padding: 4px 6px 4px 6px;
-  /* border: none; */
   outline: none;
   border: 2px solid /*Warning*/;
   border-top: none;
@@ -344,7 +348,7 @@ QMenu#submenu_children::item {
 }
 
 QComboBox#toolbar_llm_combo QAbstractItemView::item:selected, 
-QMenu#promptMenu::item:selected,
+QMenu#roleMenu::item:selected,
 QMenu#submenu_children::item:selected {
   background-color: /*Accent*/;
   color: /*Base*/;
@@ -353,10 +357,10 @@ QMenu#submenu_children::item:selected {
   border-color: none;
 }
 
-QMenu#promptMenu::item:hover {
+QMenu#roleMenu::item:hover {
   background-color: /*Base*/;
 }
-QMenu#promptMenu::separator {
+QMenu#roleMenu::separator {
   background-color: /*Base1*/;
 }
 
@@ -375,13 +379,21 @@ QComboBox::drop-down {
   border-radius: 15px;
 }
 
-QComboBox#toolbar_llm_combo {
+#combo_button_container {
   background-color: /*Base*/;
   border: 2px groove /*Warning*/;
   border-radius: 15px;
-  font-weight: bold;
   min-width: 80px;
-  /* padding-left: 6px; */
+  margin-left: 0px;
+}
+
+QComboBox#toolbar_llm_combo {
+  background-color: /*Base*/;
+  border-radius: 15px;
+  font-weight: bold;
+  padding-right: 0px;
+  padding-left: 8px;
+  margin-left: 1px;
 }
 
 #toolbar_llm_combo {
@@ -389,9 +401,25 @@ QComboBox#toolbar_llm_combo {
   color: /*Text*/;
   text-align: left;
   padding: 6px;
-  /* border: none; */
   font-size: 14px;
   font-weight: bold;
+}
+
+#btn_edit_llm_params {
+  border: none;
+  background: transparent;
+  border:2px groove /*Warning*/;
+  border-radius: 15px;
+  color: /*Text2*/;
+  padding: 6px 6px;
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0px;
+  max-width: 20px;
+}
+#btn_edit_llm_params:hover {
+  background-color: /*Warning*/;
+  border-color: /*Accent*/;
 }
 
 /* =========  SESSION PANEL  ========= */
@@ -467,7 +495,7 @@ QWidget QLabel#label_filter_menu {
   font-weight: bold;
   text-align: center;
   margin: 0px;
-  padding: 5px 16px;
+  padding: 5px 26px;
 }
 
 QWidget QLabel#label_filter_menu:hover {
@@ -866,6 +894,7 @@ QLabel#context_lbl_mode,
 QLabel#context_lbl_root {
   font-size: 15px;
   font-weight: bold;
+  margin: 0px 0px 1px 0px;
 }
 
 QTreeView::item:hover {
@@ -878,7 +907,7 @@ QRadioButton#rb_full,
 QRadioButton#rb_rag {
   font-size: 15px;
   padding: 2px 8px 2px 2px;
-  margin: 2px 0px 2px 2px;
+  margin: 2px 0px 4px 2px;
   font-weight: bold;
   border: 1px solid transparent;
   min-width: 40px;
@@ -890,7 +919,7 @@ QRadioButton#rb_rag:checked {
   color: /*Text*/;
   border-radius: 8px;
   padding: 2px 8px 2px 2px;
-  margin: 0px 0px;
+  margin: 0px 0px 4px 0px;
 }
 QRadioButton#rb_off:!checked,
 QRadioButton#rb_full:!checked,
@@ -898,7 +927,7 @@ QRadioButton#rb_rag:!checked {
   color: /*Text1*/;
   border-radius: 8px;
   padding: 2px 8px 2px 2px;
-  margin: 0px 0px;
+  margin: 0px 0px 4px 0px;
 }
 QRadioButton#rb_off:hover:!checked,
 QRadioButton#rb_full:hover:!checked,
@@ -906,7 +935,7 @@ QRadioButton#rb_rag:hover:!checked {
   color: /*Accent*/;
   border: 1px solid /*Accent*/ ;
   padding: 2px 8px 2px 2px;
-  margin: 0px 0px;
+  margin: 0px 0px 4px 0px;
   border-radius: 8px;
 }
 QRadioButton#rb_off::indicator,
@@ -1402,7 +1431,8 @@ QDialog#config_edit QPushButton:pressed {
 
 /*les boutons par leur texte */
 QDialog QPushButton[text="OK"],
-QDialog QPushButton[text="Save"] {
+QDialog QPushButton[text="Save"],
+QDialog QPushButton[text="Apply"] {
   background-color: /*Warning*/;
   color: /*Text2*/;
 } 
@@ -1424,8 +1454,16 @@ QDialog QLineEdit#config_tab_name_ed {
   margin: 4px;
 }
 /* ======== CONFIG PANEL ========= */
+
+QLabel#config_title,
 QLabel#sys_prt_lbl {
   font-size: 15px;
+  font-weight: bold;
+}
+
+QLabel#role_llm_combi_title {
+  color: /*Text*/;
+  font-size: 12px;
   font-weight: bold;
 }
 
@@ -1434,6 +1472,8 @@ QCheckBox[qssClass="slider-title"] {
   font-weight: bold;
   font-size: 14px;
   color: /*Text1*/;
+  padding-left: 3px;
+  margin-bottom: 2px;
 }
 
 QLabel[qssClass="slider-value"],
@@ -1442,6 +1482,8 @@ QComboBox[qssClass="slider-value"] {
   font-weight: bold;
   font-size: 14px;
   color: /*Text*/;
+  padding-right: 3px;
+  margin-bottom: 2px;
 }
 
 QCheckBox#config_flash_attent::indicator,
@@ -1455,6 +1497,49 @@ QCheckBox#config_flash_attent::indicator:checked,
 QCheckBox#config_thinking::indicator:checked,
 QCheckBox#config_mmap::indicator:checked {
   background-color: /*Text*/;
+}
+
+QComboBox#config_KV_Cache::drop-down {
+  width: 0px;
+  margin: 0px 0px 0px 0px;
+  padding: 3px 0px 0px 0px;
+}
+
+QComboBox#config_KV_Cache {
+  width: 30px;
+  margin: 0px 0px 0px 0px;
+  border: 1px dotted /*Danger*/;
+  border: none;
+  padding: 3px 3px 0px 0px;
+}
+
+QComboBox#config_thinking_combo {
+  text-align: right;
+  font-weight: bold;
+  font-size: 14px;
+  color: /*Text*/;
+  padding: 0px 0px 0px 0px;
+  margin-right: 4px;
+  max-width: 66px;
+}
+QComboBox#config_thinking_combo::drop-down {
+  subcontrol-origin: padding;
+  subcontrol-position: left center;
+  width: 14px;
+  border: none;
+}
+QComboBox#config_thinking_combo::down-arrow {
+  subcontrol-origin: padding;
+  subcontrol-position: left center;
+  margin-right: 4px;
+  color: /*Text*/;
+  width: 16px;
+  height: 16px;
+}
+/* Pour forcer l'alignement à droite des items dans le menu déroulant */
+QComboBox#config_thinking_combo QAbstractItemView::item {
+  text-align: right;
+  margin-right: 4px;
 }
 
 #config_panel QSlider {
@@ -1495,20 +1580,8 @@ QSlider::handle:vertical {
   background-color: /*Base*/;
   color: /*Accent*/;
   font-size: 16px;
-  min-height: 100px;
-}
-
-QComboBox#config_KV_Cache::drop-down {
-  width: 0px;
-  margin: 0px 0px 0px 0px;
-  padding: 3px 0px 0px 0px;
-}
-
-QComboBox#config_KV_Cache {
-  width: 30px;
-  margin: 0px 0px 0px 0px;
-  border: 1px dotted /*Danger*/;
-  padding: 3px 3px 0px 0px;
+  min-height: 90px;
+  margin: 5px 3px 8px 3px;
 }
 
 #separator {
@@ -1524,6 +1597,7 @@ QComboBox#config_KV_Cache {
   font-weight: bold;
   font-size: 14px;
   margin-top: 20px;
+  margin-left: 3px;
   padding:4px 0px 6px 0px;
 }
 
@@ -1539,6 +1613,7 @@ QComboBox#config_KV_Cache {
   font-weight: bold;
   font-size: 14px;
   margin-top: 20px;
+  margin-right: 3px;
   padding:4px 0px 6px 0px;
 }
 
@@ -1604,7 +1679,7 @@ QLabel#titles {
   text-align: center;
   qproperty-alignment: 'AlignCenter';
   margin-top: 0px;
-  padding:4px 0px 6px 0px;
+  padding:4px 0px 4px 0px;
 }
 
 
@@ -1677,4 +1752,77 @@ QTextBrowser::selection {
 QMenu#chatTextMenu {
   background-color: /*Base1*/;
   color: /*Text1*/; 
+}
+
+/* === Model Refresh table === */
+
+QTableWidget#modelDiffTable {
+  outline: transparent;
+  border: none;
+  background: /*Base1*/;
+  color: /*Text*/;
+  gridline-color: /*Base*/ !important;
+}
+
+QTableWidget#modelDiffTable::item {
+  outline: transparent;
+  border: 1px solid /*Base*/;
+  background: /*Base1*/;
+  color: /*Text*/;
+}
+
+/* header horizontal - titres colonnes*/
+QHeaderView#diffHeader::section {
+  background: /*Base*/;
+  color: /*Text*/;
+  font-weight:bold;
+  font-size: 14px;
+}
+/* header vertical - nombres/indexes des rangées */
+QHeaderView#rowNumbers::section {
+  background: /*Base*/;
+  color: /*Text*/;
+  font-weight:bold;
+}
+
+QLabel#modelCell,
+QLabel#fieldCell,
+QTextEdit#diffValues {
+  outline:none;
+  border:none;
+  background-color: /*Base1*/;
+  color: /*Text*/;
+  padding: 0px 4px;
+}
+QLabel#modelCell:focus,
+QLabel#fieldCell:focus,
+QTextEdit#diffValues:focus {
+  outline:none;
+  border:none;
+  background-color: /*Base*/;
+  color: /*Text*/;
+}
+
+/* pour masquer les nombres en colonne 0 */
+/* rowNumbers { visibility:hidden; } */
+
+/* Colonnes 3 et 4 : current et new values */
+
+QCheckBox[objectName^="chk_"]::indicator:unchecked {
+  background-color: /*Base*/;
+  border: 1px solid /*Text*/;
+  subcontrol-position: center;
+  width: 12px;
+  height: 12px;
+}
+QCheckBox[objectName^="chk_"]::indicator:hover {
+  border: 2px solid /*Accent*/;
+}
+
+QCheckBox[objectName^="chk_"]::indicator:checked {
+  background-color: /*Accent*/;
+  border: 1px solid /*Warning*/;
+  subcontrol-position: center;
+  width: 12px;
+  height: 12px;
 }

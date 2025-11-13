@@ -5,7 +5,14 @@ from typing import Dict, List
 from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, VectorParams
+from qdrant_client.http.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    MatchValue,
+    PointStruct,
+    VectorParams,
+)
 from qdrant_client.models import MatchAny
 
 from core.rag.config import RAGConfig
@@ -31,18 +38,23 @@ class RAGHandler:
                 f"\nThe embedder is not able to be launched : {e}\n"
             )
             return
-        print(f"Embedding model for vectorization : {self.embedder} with {self.config.embedding_dimensions} dimensions")
+        print(
+            f"Embedding model for vectorization : {self.embedder} with {self.config.embedding_dimensions} dimensions"
+        )
         # Connexion à Qdrant
         self.qdrant_client = QdrantClient(
             host=self.config.qdrant_host,
             grpc_port=self.config.qdrant_grpc_port,
             prefer_grpc=self.config.qdrant_grpc,
-            timeout=10.0,
+            timeout=30.0,
         )
 
         # créer la collection si elle n'existe pas
         try:
-            self.qdrant_client.get_collection(self.config.collection_name)
+            self.qdrant_client.get_collection(
+                self.config.collection_name,
+                timeout=30,
+            )
         except Exception:
             ("no collection gotten, try to recreate one")
             self.qdrant_client.recreate_collection(
@@ -51,6 +63,7 @@ class RAGHandler:
                     size=self.config.embedding_dimensions,  # 768 ou 1536 selon modèle...
                     distance=Distance.COSINE,
                 ),
+                timeout=30,
             )
 
         # Vectorstore wrapper LangChain
@@ -148,8 +161,8 @@ class RAGHandler:
         total = 0
         batch_size = 128
         for start in range(0, len(embeddings), batch_size):
-            batch_emb = embeddings[start: start + batch_size]
-            batch_meta = metadatas[start: start + batch_size]
+            batch_emb = embeddings[start : start + batch_size]  # noqa: E203
+            batch_meta = metadatas[start : start + batch_size]  # noqa: E203
             points: List[PointStruct] = []
             for vec, md in zip(batch_emb, batch_meta):
                 points.append(

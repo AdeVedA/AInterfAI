@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Tuple, TypedDict
 
 
 # définition du type
-class PromptConfigDefaults(TypedDict):
+class RoleConfigDefaults(TypedDict):
     description: str
     temperature: float
     top_k: int
@@ -16,16 +16,16 @@ class PromptConfigDefaults(TypedDict):
 
 CONFIG_DIR = Path("core")
 DEFAULT_LANG = "en"
-DEFAULT_CONFIG_PATH = CONFIG_DIR / f"prompt_config_defaults_{DEFAULT_LANG}.json"
+DEFAULT_CONFIG_PATH = CONFIG_DIR / f"role_config_defaults_{DEFAULT_LANG}.json"
 
 
-class PromptConfigManager:
-    """manages the config prompt defaults
-    loads and saves PromptConfigDefaultsonfigs,"""
+class RoleConfigManager:
+    """manages the config Role defaults
+    loads and saves Role_Config_Defaults_.. configs,"""
 
     def __init__(self, config_path: Optional[Path] = None):
         """Initialize with a personalized file path if specified."""
-        self._configs: dict[str, PromptConfigDefaults] = {}
+        self._configs: dict[str, RoleConfigDefaults] = {}
         self.config_path = config_path or DEFAULT_CONFIG_PATH
         self._load_configs()
 
@@ -43,15 +43,15 @@ class PromptConfigManager:
         with open(self.config_path, "w", encoding="utf-8") as f:
             json.dump(self._configs, f, indent=2, ensure_ascii=False)
 
-    # gestion de la langue des prompts
+    # gestion de la langue des Roles/system prompts
     def available_languages(self) -> dict[str, Path]:
         """
-        Detect available prompt config files.
-        Files must match pattern: prompt_config_defaults_XX.json
+        Detect available Role config files.
+        Files must match pattern: role_config_defaults_XX.json
         Returns mapping { "en": Path(...), "fr": Path(...), ... }
         """
         langs: dict[str, Path] = {}
-        for file in CONFIG_DIR.glob("prompt_config_defaults_*.json"):
+        for file in CONFIG_DIR.glob("role_config_defaults_*.json"):
             lang_code = file.stem.split("_")[-1]  # récupère "en", "fr", et d'autres à venir si...
             langs[lang_code] = file
         return langs
@@ -80,7 +80,7 @@ class PromptConfigManager:
         self.load_language(lang)
 
     # Méthodes de base
-    def get_all(self) -> dict[str, PromptConfigDefaults]:
+    def get_all(self) -> dict[str, RoleConfigDefaults]:
         """Returns all configurations."""
         return self._configs
 
@@ -93,13 +93,13 @@ class PromptConfigManager:
         return {name: config["description"] for name, config in self._configs.items()}
 
     # Méthodes de recherche
-    def get_config(self, role_name: str) -> PromptConfigDefaults | None:
+    def get_config(self, role_name: str) -> RoleConfigDefaults | None:
         """Returns a specific configuration by its name."""
         return self._configs.get(role_name, {})
 
     def get_hierarchy(self) -> Dict[str, Dict[str, object]]:
         """
-        Build a hierarchy based on the first word of each prompt name.
+        Build a hierarchy based on the first word of each Role name.
         The order of the categories follows the order of appearance in the
         original JSON file. The description is already attached, therefore the UI never has to call.
         TODO refresh from toolbar when "+ New Role" function's purpose is accepted
@@ -112,9 +112,7 @@ class PromptConfigManager:
             ...
         }
         """
-        hierarchy: Dict[
-            str, Dict[str, Tuple[Optional[Tuple[str, str]], List[Tuple[str, str]]]]
-        ] = {}
+        hierarchy: Dict[str, Dict[str, Tuple[Optional[Tuple[str, str]], List[Tuple[str, str]]]]] = {}
 
         # Parcours dans l'ordre d'insertion du JSON
         for name, cfg in self._configs.items():
@@ -127,7 +125,7 @@ class PromptConfigManager:
 
             entry = (name, cfg["description"])
 
-            # Prompt exactement égal au premier mot → base
+            # Role exactement égal au premier mot -> base
             if not rest:
                 hierarchy[category]["base"] = entry
             else:
@@ -135,16 +133,16 @@ class PromptConfigManager:
 
         return hierarchy
 
-    def add_new_prompt(self, name: str, config: PromptConfigDefaults):
-        """Add a new configuration if it does not exist."""
+    def add_new_role(self, name: str, config: RoleConfigDefaults):
+        """Add a new Role configuration if it does not exist."""
         if name in self._configs:
             return False
         self._configs[name] = config
         self._save_configs()
         return True
 
-    def remove_prompt(self, name: str):
-        """Deletes an existing configuration.
+    def remove_role(self, name: str):
+        """Deletes an existing Role configuration.
         # TODO to be implemented later in GUI
         """
         if name not in self._configs:
@@ -153,12 +151,8 @@ class PromptConfigManager:
         self._save_configs()
         return True
 
-    def search_configs(self, keyword: str) -> dict[str, PromptConfigDefaults]:
+    def search_configs(self, keyword: str) -> dict[str, RoleConfigDefaults]:
         """Search configurations containing a keyword in their description.
         # TODO to be implemented later in GUI
         """
-        return {
-            name: config
-            for name, config in self._configs.items()
-            if keyword.lower() in config["description"].lower()
-        }
+        return {name: config for name, config in self._configs.items() if keyword.lower() in config["description"].lower()}

@@ -35,7 +35,7 @@ Une interface graphique locale pour LLM offrant chat avancé avec édition de me
 
 ---
 
-**AInterfAI** est une application de bureau conçue pour interagir avec des modèles de langage locaux (LLM servis localement par [Ollama](https://ollama.com)) dans un environnement productif et permettant d'enrichir les requêtes avec votre contexte local (documents ).
+**AInterfAI** est une application de bureau conçue pour interagir avec des modèles larges de langage locaux (LLM servis localement par [Ollama](https://ollama.com)) dans un environnement productif et permettant d'enrichir les requêtes avec votre contexte local (documents, images).
 
 Construite avec PyQt6 et LangChain, elle supporte la gestion des sessions, la gestion de la configuration des LLM, la gestion des fichiers de contexte avec insertion complète de vos documents (Full) dans vos requêtes ou Retrieval-Augmented Generation (RAG) sur vos propres fichiers - le RAG utilise la base de données vectorielle [Qdrant](https://qdrant.tech).
 
@@ -50,13 +50,16 @@ Construite avec PyQt6 et LangChain, elle supporte la gestion des sessions, la ge
 USAGE :
 
 1 - cliquez sur "+ session" (**créer une session**)<br>
-2 - **choisir** un **Role**, un **LLM** (règlages éventuels)<br>
+2 - **choisir** un **Rôle** et un **LLM** (règlages éventuels des paramètres)<br>
 3 - cliquez sur **Load LLM**<br>
 (3) - si mode de contexte "Full" - choisir au moins un fichier<br>
 (3) - si mode de contexte "RAG" - choisir au moins un fichier
 (réglages éventuels de du nombre d'extraits K et de leur taille) et cliquez sur "Context vectorization"<br>
-4 - écrivez votre prompt. une fois terminé, cliquez sur **ctrl+entrée**<br>
+4 - écrivez votre prompt (joignez une image par drag&drop si souhaité). une fois terminé, cliquez sur **ctrl+entrée**<br>
 5 - validez votre requête avec **ctrl+entrée**...<br>
+
+- Si vous téléchargez de nouveaux modèles ou mettez-à-jour des anciens, cliquez sur `Add Model / Refresh Model Properties` dans le menu `Settings`
+- Si vous souhaitez éditer les paramètres par défaut du modèle, cliquez sur l'icône `🛠️` à droite du llm dans la toolbar
 
 <h6>----------------------</h6>
 Présentation
@@ -67,8 +70,8 @@ Présentation
 
 L'architecture sépare principalement deux couches :
 
--   **core/** : logique métier, modèles de données, gestionnaires de configuration, gestionnaire de LLM, sous-module rag, thème, convertisseur tiktoken.
--   **gui/** : composants UI PyQt, workers pour le rendu et l'interaction avec le LLM, panneaux.
+- **core/** : logique métier, modèles de données, gestionnaires de configuration, gestionnaire de LLM, sous-module rag, thème, convertisseur tiktoken.
+- **gui/** : composants UI PyQt, workers pour le rendu et l'interaction avec le LLM, panneaux.
 
 La partie « core » est indépendante du framework UI et peut donc être réutilisée pour d'autres projets LLM...  
 Bien que ce pattern soit utile, il introduit des difficultés pour garder les composants indépendants et partager un état centralisé. PyQt nécessite souvent de nombreux signaux dans ce type de situation.
@@ -79,122 +82,124 @@ Bien que ce pattern soit utile, il introduit des difficultés pour garder les co
 
 <h2 id="tech-stack">⚙️ Stack Technique</h2>
 
--   **Ollama** (serveur LLM local avec API REST)
--   **PyQt6** (framework GUI)
--   **SQLAlchemy** (ORM SQLite pour le stockage persistant)
--   **Qdrant** (base de vecteurs pour le RAG)
--   **LangChain** (bibliothèque d'intégration LLM)
--   **LangChain-ollama** (intégration Ollama pour LangChain)
--   **LangChain-qdrant** (intégration Qdrant pour LangChain)
--   **python-docx, python-pptx, pdfminer.six, striprtf** (modules d'extraction de texte)
--   **markdown2** (rendu Markdown)
--   **pygments** (coloration syntaxique)
--   **Configs JSON** (paramètres généraux de l'UI, prompts/configs de prompts, filtres du parseur de contexte)
+- **Ollama** (serveur LLM local avec API REST)
+- **PyQt6** (framework GUI)
+- **SQLAlchemy** (ORM SQLite pour le stockage persistant)
+- **Qdrant** (base de vecteurs pour le RAG)
+- **LangChain** (bibliothèque d'intégration LLM)
+- **LangChain-ollama** (intégration Ollama pour LangChain)
+- **LangChain-qdrant** (intégration Qdrant pour LangChain)
+- **python-docx, python-pptx, pdfminer.six, striprtf** (modules d'extraction de texte)
+- **markdown2** (rendu Markdown)
+- **pygments** (coloration syntaxique)
+- **Configs JSON** (paramètres généraux de l'UI, Rôles/configs de prompts, filtres du parseur de contexte)
 
 <h2 id="features">🚀 Fonctionnalités</h2>
 
 ### 🧩 Général (Chat, Barre d'outils...)
 
--   Chat avec les LLM locaux via Ollama
--   **Rendu** Markdown avec coloration syntaxique
--   **Diffusion** de messages en temps réel
--   **Copier**, **modifier**, **supprimer** les messages
--   **Recherche** d'une chaîne dans le contenu des bulles de chat, avec mise en surbrillance et navigation préc/suiv
--   Chargement/déchargement dynamique des modèles
--   Barre d'outils avec **indicateur d'état** du LLM (vert/rouge)
--   **console** superposée affichant la sortie console de l'application (cliquer sur le triangle ▼ en haut-à-gauche du panneau de chat)
--   **comptage** local des **tokens** affiché à l'aide de `tiktoken` (session, requête utilisateur, panier des fichiers de contexte)
--   Options pour :
+- Chat avec les LLM locaux via Ollama
+- **Rendu** Markdown avec coloration syntaxique
+- **Diffusion** de messages en temps réel
+- **Copier**, **modifier**, **supprimer** les messages
+- **Recherche** d'une chaîne dans le contenu des bulles de chat, avec mise en surbrillance et navigation préc/suiv
+- Chargement/déchargement dynamique des modèles
+- Barre d'outils avec **indicateur d'état** du LLM (vert/rouge)
+- **console** superposée affichant la sortie console de l'application (cliquer sur le triangle ▼ en haut-à-gauche du panneau de chat)
+- **comptage** local des **tokens** affiché à l'aide de `tiktoken` (session, requête utilisateur, panier des fichiers de contexte)
+- Options pour :
 
-    -   **Afficher et modifier la requête finale avant envoi** au LLM (avec recherche ctrl+f aussi dedans !)
-    -   **Générer** automatiquement un **titre** de session (si le nom de la session a sa forme par défaut) <br> -> Je vous recommande de désactiver cette option si vous avez de faibles ressources, ou si vous utilisez un gros LLM avec une longue session (économie d'énergie et de temps).
-    -   Définir le temps de **« keep-alive »** du LLM en mémoire
-    -   Définir l'intervalle entre chaque sondage sur la **disponibilité** du LLM
+  - **Afficher et modifier la requête finale avant envoi** au LLM (avec recherche ctrl+f aussi dedans !)
+  - **Générer** automatiquement un **titre** de session (si le nom de la session a sa forme par défaut) <br> -> Je vous recommande de désactiver cette option si vous avez de faibles ressources, ou si vous utilisez un gros LLM avec une longue session (économie d'énergie et de temps).
+  - Définir le temps de **« keep-alive »** du LLM en mémoire
+  - Définir l'intervalle entre chaque sondage sur la **disponibilité** du LLM
 
 ### 🗂️ Gestion des Sessions
 
--   Multiples sessions de chat avec stockage persistant
--   **Filtrage** par date (avec vos dossiers), type de Prompt (Rôle) ou LLM
--   Organisation par **dossiers** (et dossiers "factices" pour le filtrage des sessions par LLM ou Prompt/Rôle)
--   Glisser-déposer les sessions entre dossiers (avec auto-ouverture des dossiers cibles lors du dépôt)
--   Ouvrir / fermer un dossier
--   Créer automatiquement un dossier de session lorsqu'on dépose une session sur une autre session
--   **Renommer** (double-clic sur le nom de la session/dossier) et **supprimer** les sessions ou dossiers avec l'icône "corbeille"
--   **Infobulle** de session (avec le dernier LLM utilisé, type de prompt/rôle, date...)
--   **Exporter en markdown** une session entière (tous les messages du chat) stylisée avec le thème actif, sauvegardée dans un fichier nommé {nom_de_session}.md
--   Exporter en html (wip...)
+- Multiples sessions de chat avec stockage persistant
+- **Filtrage** par date (avec vos dossiers), type de Rôle ou LLM
+- Organisation par **dossiers** (et dossiers "factices" pour le filtrage des sessions par LLM ou Rôle)
+- Glisser-déposer les sessions entre dossiers (avec auto-ouverture des dossiers cibles lors du dépôt)
+- Ouvrir / fermer un dossier
+- Créer automatiquement un dossier de session lorsqu'on dépose une session sur une autre session
+- **Renommer** (double-clic sur le nom de la session/dossier) et **supprimer** les sessions ou dossiers avec l'icône "corbeille"
+- **Infobulle** de session (avec le dernier LLM utilisé, type de Rôle, date...)
+- **Exporter en markdown** une session entière (tous les messages du chat) stylisée avec le thème actif, sauvegardée dans un fichier nommé {nom_de_session}.md
+- Exporter en html (wip...)
 
 ### 📚 Système de Contexte
 
 Un système modulaire pour enrichir les prompts avec vos documents (connaissances fondées sur vos documents injectables).
 
--   **Modes de Contexte**
+- **Modes de Contexte**
 
-    -   `OFF` : Aucun contexte externe (requête normale)
-    -   `FULL CONTEXT` : Injecte le contenu complet parsé des fichiers sélectionnés
-    -   `RAG` : vectorise & récupère les chunks sémantiquement pertinents (pour votre requête) des fichiers sélectionnés via Qdrant avec le modèle d'embedding
+  - `OFF` : Aucun contexte externe (requête normale)
+  - `FULL CONTEXT` : Injecte le contenu complet parsé des fichiers sélectionnés
+  - `RAG` : vectorise & récupère les chunks sémantiquement pertinents (pour votre requête) des fichiers sélectionnés via Qdrant avec le modèle d'embedding
 
-    -   Formats supportés : `.pdf`, `.epub`, `.docx`, `.pptx`, `.rtf`, `.txt`, `.md`, `.xml`, `.json`, etc.
+  - Formats supportés : `.pdf`, `.epub`, `.docx`, `.pptx`, `.rtf`, `.txt`, `.md`, `.xml`, `.json`, etc.
 
--   **Fonctionnalités FULL & RAG**
+- **Fonctionnalités FULL & RAG**
 
-    -   Paramètres ajustables : `K extracts` (nombre de chunks récupérés) et `chunk size` (taille du chunk ≈ tokens par chunk).
-    -   Modèle d'embedding utilisé par défaut : `nomic-embed-text:latest` (vous pouvez changer `embedding_model` dans `core/rag/config.py` pour l'instant)
-    -   Rafraîchir l'index (utile après mise à jour des fichiers source)
-    -   Vectorisation et indexation par fichier ou paquet de fichiers
-    -   **Utilisation du RAG** :
-        -   sélectionner vos fichiers,
-        -   cliquer sur **Context vectorization**,
-        -   (sélectionner et) charger un LLM avec un rôle/Prompt pertinent (RAG... ou créez le vôtre),
-        -   écrire & envoyer votre prompt
+  - Paramètres ajustables : `K extracts` (nombre de chunks récupérés) et `chunk size` (taille du chunk ≈ tokens par chunk).
+  - Modèle d'embedding utilisé par défaut : `nomic-embed-text:latest` (vous pouvez changer `embedding_model` dans `core/rag/config.py` pour l'instant)
+  - Rafraîchir l'index (utile après mise à jour des fichiers source)
+  - Vectorisation et indexation par fichier ou paquet de fichiers
+  - **Utilisation du RAG** :
+    - sélectionner vos fichiers,
+    - cliquer sur **Context vectorization**,
+    - (sélectionner et) charger un LLM avec un Rôle pertinent (RAG... personnalisez/sauvegardez ou créez le vôtre),
+    - écrire & envoyer votre prompt
 
--   **Parsing de Contexte Multi-Config**
+- **Parsing de Contexte Multi-Config**
 
-    -   Configurations persistantes et personnalisables du parsing d'arborescence de fichiers (inclusion/exclusions/gitignore/repertoires)nommées et définies par l'utilisateur stockées dans `context_parser_config.json`.
-    -   Interface d'édition des configurations à onglets
-    -   Contrôle précis des extensions de fichiers, motifs d'inclusion/exclusion avec wildcards et exclusions optionnelles `.gitignore`, nombre maximal d'enregistrements d'historique de dossiers locaux...
+  - Configurations persistantes et personnalisables du parsing d'arborescence de fichiers (inclusion/exclusions/gitignore/repertoires)nommées et définies par l'utilisateur stockées dans `context_parser_config.json`.
+  - Interface d'édition des configurations à onglets
+  - Contrôle précis des extensions de fichiers, motifs d'inclusion/exclusion avec wildcards et exclusions optionnelles `.gitignore`, nombre maximal d'enregistrements d'historique de dossiers locaux...
 
--   **Navigation dans l'Arborescence de Fichiers**
+- **Navigation dans l'Arborescence de Fichiers**
 
-    -   Listing récursif depuis un chemin racine (avec une limite -désactivable- à 3000 fichiers pour éviter les risques de surmenage et inviter l'utilisateur à resserer les filtres dans la config)
-    -   Respect de `.gitignore` et des exclusions définies par l'utilisateur
-    -   Filtrage basé sur les expressions régulières (regex)
-    -   Rafraîchissement et scan d'un simple clic
+  - Listing récursif depuis un chemin racine (avec une limite -désactivable- à 3000 fichiers pour éviter les risques de surmenage et inviter l'utilisateur à resserer les filtres dans la config)
+  - Respect de `.gitignore` et des exclusions définies par l'utilisateur
+  - Filtrage basé sur les expressions régulières (regex)
+  - Rafraîchissement et scan d'un simple clic
 
 ### ⚙️ Gestion de la Configuration LLM
 
--   **Configurations de prompts par défaut (français ou anglais)**
+- **Configurations de Rôles par défaut (français ou anglais)**
 
-    -   Les **nombreux modèles de rôle/prompts fournis** permettent de définir rapidement un rôle/prompt système pertinent pour vos LLM.
-    -   Toute **modification de la combinaison LLM + rôle/prompt système** et ses paramètres associés peut être **sauvegardée**.
-    -   Vous pouvez **créer de nouveaux prompts** en cliquant sur « + New Role ». Si plusieurs rôles ou prompts système partagent le même premier mot suivi d’un espace, ils seront affichés/regroupés dans un sous‑menu correspondant à ce mot.
-    -   Les rôles/prompts par défaut sont chargés avec un **choix de langue (français ou anglais)** et organisés en dossiers selon le premier mot de leurs noms. Vous pouvez donc vous organiser comme vous le souhaitez : utilisez « + New Role » dans l’application ou éditez simplement le fichier core/prompt_config_defaults_fr.json.
-    -   Lors du changement de langue (français/anglais), le programme tente de trouver et de charger le prompt équivalent dans l’autre langue (par index)
+  - Les **nombreux modèles de Rôles fournis** permettent de définir rapidement un Rôle/prompt système pertinent pour vos LLM.
+  - Toute **modification de la combinaison LLM + Rôle** et ses paramètres associés peut être **sauvegardée**.
+  - Vous pouvez **créer de nouveaux Rôles** en cliquant sur « + New Role ». Si plusieurs Rôles partagent le même premier mot suivi d’un espace, ils seront affichés/regroupés dans un sous‑menu correspondant à ce premier mot.
+  - Les Rôles par défaut sont chargés avec un **choix de langue (français ou anglais)** et organisés en dossiers selon le premier mot de leurs noms. Vous pouvez donc vous organiser comme vous le souhaitez : utilisez « + New Role » dans l’application ou éditez simplement le fichier core/role_config_defaults_fr.json.
+  - Lors du changement de langue (français/anglais), le programme tente de trouver et de charger le Rôle équivalent dans l’autre langue (par index)
 
--   **Propriétés du LLM**
+- **Propriétés du LLM**
 
-    -   Récupération des paramètres par défaut du LLM via l'API locale d'Ollama
-    -   Indication des paramètres par défaut (le cas échéant) sur les curseurs du panneau UI de configuration
+  - Récupération des paramètres par défaut du LLM via l'API locale d'Ollama
+  - Indication des paramètres par défaut (le cas échéant) sur les curseurs du panneau UI de configuration
+  - Modification manuelle des paramètres par défaut d'un LLM (côté base de données d'AInterfAI, et non côté Ollama) en cliquant sur l'icône `🛠️` à droite du llm dans la toolbar
+  - Comparaison entre les paramètres par défaut de la base de données d'AInterfAI et ceux du fichier modèle d'Ollama pour l'ensemble des modèles présents et possibilité de mise-à-jour sélective (ou retour aux paramètres inscrits dans le fichier modèle) des paramètres.
 
--   **Configurations Rôle/Prompt & LLM**
+- **Configurations Rôle & LLM**
 
-    -   Enregistrer/Charger : ensembles Prompt/rôle + paramètres LLM
-    -   **Paramètres éditables** (et hyper-paramètres) :
-        -   prompt système
-        -   temperature, top_k, repeat_penalty, top_p, min_p
-        -   max tokens (avec limitation du modèle intégrée)
-        -   flash attention (booléen)
-        -   kv_cache_type (f16, q8_0, q4_0)
-        -   use_mmap (booléen)
-        -   num_thread (threads CPU à utiliser)
-        -   thinking (booléen, uniquement si le modèle le supporte)
+  - Enregistrer/Charger : ensembles Rôle (/Prompt + paramètres LLM) et LLM.
+  - **Paramètres éditables** (et hyper-paramètres) :
+    - prompt système
+    - temperature, top_k, repeat_penalty, top_p, min_p
+    - max tokens (avec limitation du modèle intégrée)
+    - flash attention (booléen)
+    - kv_cache_type (f16, q8_0, q4_0)
+    - use_mmap (booléen)
+    - num_thread (threads CPU à utiliser)
+    - thinking (booléen, uniquement si le modèle le supporte)
 
 ### 🎨 Thèmes & Apparence
 
--   Thématisation dynamique QSS avec placeholders de couleur (ex. `/*Base*/`, `/*Accent*/`)
--   Thèmes clair/sombre via un système de palette JSON (vous pouvez personnaliser `core\theme\color_palettes.py` à votre guise)
--   Sortie streaming Markdown avec blocs de code mis en surbrillance (autant que possible)
--   Bulles de messages avec icônes copier, éditer et supprimer qui suivent le défilement (double-clic sur les bulles pour afficher/masquer ces icônes)
+- Thématisation dynamique QSS avec placeholders de couleur (ex. `/*Base*/`, `/*Accent*/`)
+- Thèmes clair/sombre via un système de palette JSON (vous pouvez personnaliser `core\theme\color_palettes.py` à votre guise)
+- Sortie streaming Markdown avec blocs de code mis en surbrillance (autant que possible)
+- Bulles de messages avec icônes copier, éditer et supprimer qui suivent le défilement (double-clic sur les bulles pour afficher/masquer ces icônes)
 
 ---
 
@@ -202,9 +207,9 @@ Un système modulaire pour enrichir les prompts avec vos documents (connaissance
 
 ### 0. Installer [Python 3.13+](https://www.python.org/downloads/) _des versions antérieures pourraient fonctionner... je n'ai simplement pas testé !_ et [git](https://git-scm.com/downloads)
 
-→ [https://www.python.org/downloads/](https://www.python.org/downloads/)
+-> [https://www.python.org/downloads/](https://www.python.org/downloads/)
 
-→ [https://git-scm.com/downloads](https://git-scm.com/downloads)
+-> [https://git-scm.com/downloads](https://git-scm.com/downloads)
 
 ### 1. Récupérer le logiciel
 
@@ -247,18 +252,18 @@ pip install -r requirements.txt
 
 ### 4. Installer Ollama
 
-→ [https://ollama.com/download](https://ollama.com/download)
+-> [https://ollama.com/download](https://ollama.com/download)
 
 installez-le. Redémarrez si demandé. Une fois installé, vérifiez (ou ajoutez-le) que le chemin d'installation d'Ollama est bien dans le path de vos variables d'environnement système
 
--   touche windows, "variables", "Modifier les variables d'environnement système", "Variables d'environnement", selectionnez la ligne "Path", cliquez sur "modifier" et vérifiez que le chemin vers ollama est présent.
--   Si non, cliquez sur "Nouveau"
--   ajoutez: %LOCALAPPDATA%\Programs\Ollama (ou le chemin exact dans lequel vous avez installé Ollama)
--   Cliquez "OK" pour sauvegarder.
+- touche windows, "variables", "Modifier les variables d'environnement système", "Variables d'environnement", selectionnez la ligne "Path", cliquez sur "modifier" et vérifiez que le chemin vers ollama est présent.
+- Si non, cliquez sur "Nouveau"
+- ajoutez: %LOCALAPPDATA%\Programs\Ollama (ou le chemin exact dans lequel vous avez installé Ollama)
+- Cliquez "OK" pour sauvegarder.
 
 ### 5. Télécharger un LLM et un embedding
 
-→ [https://ollama.com/search](https://ollama.com/search)
+-> [https://ollama.com/search](https://ollama.com/search)
 Sur cette page, trouvez un modèle LLM dont la taille est de maximum 3/4 de votre VRAM+RAM (GB), cliquez sur son nom et copiez la commande à exécuter en terminal. Testez une fois en terminal avec une requête (après avoir fait un ollama run {nom_du_model_choisi}) comme ca vous êtes sûr que ca fonctionne côté serveur ollama.
 
 **A.** Téléchargez votre premier modèle (voir la section [Modèles Ollama Recommandés](#modeles_recommandes) si vous êtes perdu, ici on montre comment télécharger `mistral-small3.2:24b`) :
@@ -278,7 +283,7 @@ ollama pull nomic-embed-text:latest
 
 ### 6. Installer [Qdrant](https://github.com/qdrant/qdrant/releases)
 
-→ [https://github.com/qdrant/qdrant/releases](https://github.com/qdrant/qdrant/releases)
+-> [https://github.com/qdrant/qdrant/releases](https://github.com/qdrant/qdrant/releases)
 
 Téléchargez le fichier correspondant à votre os (qdrant-x86_64-pc-windows-msvc.zip pour Windows, qdrant-x86_64-apple-darwin.tar.gz pour Mac, etc..), décompressez/ouvrez l'archive et mettez le fichier qdrant (binary) dans un dossier de votre choix.
 
@@ -303,7 +308,7 @@ Lancez enfin l'application :
 python main.py
 ```
 
-Lors du premier lancement, le programme interrogera, via des requêtes _locales_ à l'API REST d'Ollama (`api/tags` & `api/show`), les informations des modèles afin de les enregistrer en base et de fournir des indications sur les hyper-paramètres et propriétés recommandés pour chaque LLM au sein du Modelfile d'Ollama et les préférer à ceux associés aux rôles/prompts par défaut (qui sont agnostiques du LLM).
+Lors du premier lancement, le programme interrogera, via des requêtes _locales_ à l'API REST d'Ollama (`api/tags` & `api/show`), les informations des modèles afin de les enregistrer en base et de fournir des indications sur les hyper-paramètres et propriétés recommandés pour chaque LLM au sein du Modelfile d'Ollama et les préférer à ceux associés aux Rôles/prompts par défaut (qui sont agnostiques du LLM).
 Si besoin, vous pouvez modifier le délai (`sync_time: timedelta = timedelta(days=30)`) entre chaque parsing des propriétés LLM dans `core\llm_properties.py` (si vous mettez à jour les Modelfile souvent).
 
 ### 8. Lancement facile (pour un démarrage automatisé)
@@ -320,8 +325,8 @@ py main.py
 cmd /k
 ```
 
-Vous pouvez créer un raccourci sur le Bureau en faisant un clic droit sur le fichier et en sélectionnant **“Créer un raccourci”** (ou _Envoyer vers → Bureau_).  
-Une fois le raccourci créé, faites un clic droit dessus, choisissez **“Propriétés → Modifier l’icône…”**, puis parcourez `/assets/icon.ico` (ou choisissez votre propre icône).
+Vous pouvez créer un raccourci sur le Bureau en faisant un clic droit sur le fichier et en sélectionnant **“Créer un raccourci”** (ou _Envoyer vers -> Bureau_).  
+Une fois le raccourci créé, faites un clic droit dessus, choisissez **“Propriétés -> Modifier l’icône…”**, puis parcourez `/assets/icon.ico` (ou choisissez votre propre icône).
 
 #### B. macOS / Linux
 
@@ -405,9 +410,9 @@ project_root/
 │   ├── database.py                 # Session DB SQLAlchemy
 │   ├── llm_manager.py              # Gestionnaire de LLM
 │   ├── llm_properties.py           # Gestionnaire des propriétés par défaut du LLM
-│   ├── models.py                   # Modèles ORM (Session, Message, Folder, llm_properties, prompt_config)
-│   ├── prompt_config_defaults.json # Configs par défaut Rôle/Prompt
-│   ├── prompt_config_manager.py    # Gestionnaire de configurations Rôle/Prompt
+│   ├── models.py                   # Modèles ORM (Session, Message, Folder, llm_properties, role_config)
+│   ├── role_config_defaults.json # Configs par défaut Rôle/Prompt
+│   ├── role_config_manager.py    # Gestionnaire de configurations Rôle/Prompt
 │   ├── prompt_manager.py           # Construit les prompts LLM à partir des configs
 │   ├── session_manager.py          # Gestion des sessions (et leurs messages)
 │   ├── message_manager/                  # Module de gestion des messages
@@ -456,18 +461,17 @@ project_root/
 
 ## 🔮 Perspectives Futures
 
--   trouver un emploi ! <--- IMPORTANT après presque 5 mois sur cette application !!!!
--   Panneau de chat : « continue / regenerate » des réponses LLM
--   Sauvegarder les messages rendus en HTML pour éviter le rendu à la volée
--   Abstraction de la gestion des serveurs LLM afin d'intégrer llamacpp et/ou LMStudio comme fournisseur LLM
--   Autoriser l'usage de l'API OpenAI pour des requêtes LLM distantes
--   Possibilité d'imbriquer des dossiers de session dans d'autres dossiers de session
--   Création et orchestration d'agents LangChain
--   Résumé structuré multi-fichiers basé sur le RAG
--   Migration de la base SQLite vers PostgreSQL(...?)
--   Intégration de la gestion d'images pour les LLM capables de vision
--   Gestion multilingue de l'interface : traductions... (pour les rôles/prompt par défaut, c'est déjà fait!)
--   Collaborations ?
+- trouver un emploi ! <--- IMPORTANT après presque 5 mois sur cette application !!!!
+- Panneau de chat : « continue / regenerate » des réponses LLM
+- Sauvegarder les messages rendus en HTML pour éviter le rendu à la volée
+- Abstraction de la gestion des serveurs LLM afin d'intégrer llamacpp et/ou LMStudio comme serveur LLM
+- Autoriser l'usage de l'API OpenAI pour des requêtes LLM distantes
+- Possibilité d'imbriquer des dossiers de session dans d'autres dossiers de session
+- Création et orchestration d'agents LangChain
+- Résumé structuré multi-fichiers basé sur le RAG
+- Migration de la base SQLite vers PostgreSQL (...?)
+- Gestion multilingue de l'interface : traductions... (pour les Rôles/prompts par défaut, c'est déjà fait!)
+- Collaborations ?
 
 ---
 
@@ -477,7 +481,7 @@ Ce projet est distribué sous licence GPL v3. Voir le fichier [LICENSE](https:
 
 ### Licences Tierces
 
--   [PyQt6](https://github.com/python-qt-tools/PyQt6-stubs/blob/main/LICENSE) - GPL v3
--   [LangChain](https://github.com/langchain-ai/langchain/blob/master/LICENSE) - MIT
--   [Qdrant](https://github.com/qdrant/qdrant/blob/master/LICENSE) - Apache 2.0
--   [Ollama](https://github.com/ollama/ollama/blob/main/LICENSE) - MIT
+- [PyQt6](https://github.com/python-qt-tools/PyQt6-stubs/blob/main/LICENSE) - GPL v3
+- [LangChain](https://github.com/langchain-ai/langchain/blob/master/LICENSE) - MIT
+- [Qdrant](https://github.com/qdrant/qdrant/blob/master/LICENSE) - Apache 2.0
+- [Ollama](https://github.com/ollama/ollama/blob/main/LICENSE) - MIT

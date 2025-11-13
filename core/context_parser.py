@@ -29,8 +29,6 @@ class ParserConfig:
 
     DEFAULT_CONFIG_NAME = "default"
     DEFAULTS = {
-        "General": {"history_max": "10"},
-        "Paths": {"history": ""},
         "Extensions": {
             "allowed": ".py .js .jsx .tsx .ts .html .css .qss .json .cpp .c .java .go .rs .swift .php .sql .sh .ps1 "
             ".rb .pl .scala .dart .kt .swift .xml .yaml .yml .pdf .docx .pptx .rtf .txt"
@@ -42,6 +40,8 @@ class ParserConfig:
             "setup.py pom.xml composer.json package-lock.json package.json Gemfile gemspec *__init__* *bootstrap* "
             "*.jpg *.jpeg *.png *.mp4 *.mov",
         },
+        "General": {"history_max": "10"},
+        "Paths": {"history": ""},
         "Options": {"use_gitignore": "yes"},
         "Token": {"model": "gpt-4"},
     }
@@ -251,8 +251,8 @@ class ContextParser(ParserConfig):
         and returns the ordered list of at most `self.max_files` paths to be included.
         If the number of files exceeds `self.max_files':
 
-        * `raise_on_limit = true` → will raise` toomanyfileserror '(current logic)
-        * `raise_on_limit = false` → will only return `Self.max_files" first files (all the others are truncated).
+        * `raise_on_limit = true` -> will raise` toomanyfileserror '(current logic)
+        * `raise_on_limit = false` -> will only return `self.max_files" first files (all the others are truncated).
         """
         base = Path(base_dir)
         git_pats = self._read_gitignore(base)

@@ -38,13 +38,24 @@ font-size: 120%;
 color: /*Text*/  !important;
 font-size: 110%;
 }
-  a, img {
+  a {
 background: linear-gradient(to right, /*Danger*/, /*Base1*/) !important;
 border: 1px outset /*Danger*/ !important;
 border-radius: 15px;
 color: /*Text*/  !important;
 padding: 5px;
 margin: 2px 2px 2px 2px;
+}
+  img {
+border: 1px outset /*Danger*/ !important;
+border-radius: 15px;
+max-width: 1024px;
+max-height: 1024px;
+width: auto;
+height: auto;
+object-fit: contain;
+display: block;
+margin: 8px auto;
 }
   a:hover, img:hover {
 background: linear-gradient(to left, /*Danger*/, /*Base1*/) !important;
@@ -182,13 +193,24 @@ font-size: 120%;
 color: /*Text*/  !important;
 font-size: 110%;
 }
-  a, img {
+  a {
 background: linear-gradient(to right, /*Danger*/, /*Base1*/) !important;
 border: 1px outset /*Danger*/ !important;
 border-radius: 15px;
 color: /*Text*/  !important;
 padding: 5px;
 margin: 2px 2px 2px 2px;
+}
+  img {
+border: 1px outset /*Danger*/ !important;
+border-radius: 15px;
+max-width: 1024px;
+max-height: 1024px;
+width: auto;
+height: auto;
+object-fit: contain;
+display: block;
+margin: 8px auto;
 }
   a:hover, img:hover {
 background: linear-gradient(to left, /*Danger*/, /*Base1*/) !important;

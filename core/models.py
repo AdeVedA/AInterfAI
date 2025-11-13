@@ -29,9 +29,7 @@ class Folder(Base):
     __tablename__ = "folder"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, index=True)
-    created_at = Column(
-        DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
-    )
+    created_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False)
     parent_id = Column(Integer, ForeignKey("folder.id"), nullable=True)
     parent = relationship("Folder", remote_side=[id], backref="children")
     sessions = relationship("Session", back_populates="folder", cascade="all, delete-orphan")
@@ -68,7 +66,7 @@ class Session(Base):
 class Message(Base):
     """
     A single message in (a history of) session.
-    message sender = "user" => llm_name, prompt_type and config_id are NULL
+    message sender = "user" => llm_name, role_type and config_id are NULL
     """
 
     __tablename__ = "message"
@@ -79,33 +77,33 @@ class Message(Base):
     timestamp = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False)
 
     llm_name = Column(String, ForeignKey("llm_properties.model_name"), nullable=True)
-    prompt_type = Column(String, nullable=True)
-    config_id = Column(Integer, ForeignKey("prompt_config.id"), nullable=True)
+    role_type = Column(String, nullable=True)
+    config_id = Column(Integer, ForeignKey("role_config.id"), nullable=True)
 
     __table_args__ = (
         CheckConstraint(
             "(sender != 'llm') OR \
-             (llm_name IS NOT NULL AND prompt_type IS NOT NULL AND config_id IS NOT NULL)",
+             (llm_name IS NOT NULL AND role_type IS NOT NULL AND config_id IS NOT NULL)",
             name="chk_message_llm_fields",
         ),
         Index("idx_message_config", "config_id"),
     )
 
     session = relationship("Session", back_populates="messages")
-    config = relationship("PromptConfig")
+    config = relationship("RoleConfig")
     llm_properties = relationship("LLMProperties")
 
 
-class PromptConfig(Base):
+class RoleConfig(Base):
     """
-    Stocke the overall configurations of prompts/prompts with their fundamental parameters.
-    Unique by (llm_name, prompt_type).
+    Stocke the overall configurations of Roles with their fundamental parameters.
+    Unique by (llm_name, role_type).
     """
 
-    __tablename__ = "prompt_config"
+    __tablename__ = "role_config"
     id = Column(Integer, primary_key=True)
     llm_name = Column(String, nullable=False, index=True)
-    prompt_type = Column(String, nullable=False, index=True)
+    role_type = Column(String, nullable=False, index=True)
     description = Column(Text)
 
     # Paramètres généraux du modèle
@@ -117,9 +115,9 @@ class PromptConfig(Base):
     default_max_tokens = Column(Integer, default=16384, nullable=False)
     flash_attention = Column(Boolean, default=True)
     kv_cache_type = Column(String, default="f16")
-    think = Column(Boolean, default=None, nullable=True)
+    think = Column(String, default=None, nullable=True)
 
-    __table_args__ = (UniqueConstraint("llm_name", "prompt_type", name="uix_llm_prompt"),)
+    __table_args__ = (UniqueConstraint("llm_name", "role_type", name="uix_llm_role"),)
 
 
 class LLMProperties(Base):
@@ -128,8 +126,7 @@ class LLMProperties(Base):
     Attributes:
         model_name (str): Unique identifier of the model (name:tag)
         context_length (int): Maximum length of supported context
-        supports_json (bool): Ability to generate structured json
-        allowed_template_keys (JSON): Authorized template keys
+        ...
     """
 
     __tablename__ = "llm_properties"
@@ -158,7 +155,7 @@ class LLMProperties(Base):
 
     def __repr__(self):
         return (
-            f"\nselected LLM Properties :\nMODEL_name={self.model_name!r}, SIZE={self.size} GB"
+            f"\nselected LLM Properties (AInterfAI DB side) :\nMODEL_name={self.model_name!r}, SIZE={self.size} GB"
             f"\ncontext_length={self.context_length}, capabilities={self.capabilities}\n"
             f"temp : {self.temperature}, top_k : {self.top_k}, repeat_penalty : {self.repeat_penalty}, "
             f"top_p : {self.top_p}, min_p : {self.min_p}\n"

@@ -57,8 +57,8 @@ class LLMManager:
 
     def get_llm(self, model_name: str, params: dict) -> OllamaLLM:
         """
-        Instancie un modèle OllamaLLM avec paramètres runtime (num_ctx, num_thread, etc.)
-        directement via l'API REST, avec préchargement non-bloquant.
+        Instanciate an OllamaLLM model with runtime parameters (num_ctx, num_thread, etc.)
+        directly through Rest API, with non-blocking preloading.
         """
         # TODO on verra plus tard si on permet de puller depuis le log
         available = [m["name"] for m in self.list_models()]
@@ -124,7 +124,7 @@ class LLMManager:
         # 3. Construire les kwargs pour OllamaLLM
         llm_kwargs = {
             "model": model_name,
-            "reasoning": params.get("think", None),
+            "reasoning": None if params.get("think") not in (0, 1) else params.get("think"),
             "temperature": params.get("temperature"),
             "top_k": params.get("top_k", 40),
             "top_p": params.get("top_p", 0.9),
@@ -181,11 +181,11 @@ class LLMManager:
         Returns:
             list[str]: A list of model names.
         """
-        # Synchronisation conditionnelle
-        threading.Thread(target=self.props_mgr.sync, daemon=True).start()
+        # Synchronisation conditionnelle (voir aussi toolbar settings action)
+        # threading.Thread(target=self.props_mgr.sync, daemon=True).start()
 
         # Appel à l'API Ollama pour la liste
-        self._ensure_server_running()
+        # self._ensure_server_running()
         resp = requests.get(f"{self.ollama_host}/api/tags")  # liste modèles locaux d'ollama
         resp.raise_for_status()
         data = resp.json()
@@ -232,8 +232,7 @@ class LLMManager:
             print("Unexpected response format")
             return None
 
-    # --- Methods for startup checking
-
+    # Methods for startup checking
     def is_model_in_ollama(self, model_name: str) -> bool:
         """verifies if a model_name is in the ollama currently loaded models
         Args :
@@ -315,8 +314,8 @@ class LLMManager:
 
 def _format_bytes(num: int) -> str:
     """Return a human-readable byte size."""
-    for unit in ("B", "KiB", "MiB", "GiB", "TiB"):
+    for unit in ("B", "KiB", "KB", "MiB", "MB", "GiB", "GB", "TiB", "TB"):
         if abs(num) < 1024.0:
             return f"{num:.2f} {unit}"
         num /= 1024.0
-    return f"{num:.2f} PiB"
+    return f"{num:.2f} {unit}"

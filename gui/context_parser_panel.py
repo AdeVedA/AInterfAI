@@ -152,7 +152,7 @@ class ContextBuilderPanel(QWidget):
         main.setContentsMargins(3, 8, 3, 8)
 
         # Ligne de titre
-        lbl_mode = QLabel(" Context ", self)
+        lbl_mode = QLabel("Context Management :", self)
         lbl_mode.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         lbl_mode.setObjectName("context_lbl_mode")
         lbl_mode.setToolTip(

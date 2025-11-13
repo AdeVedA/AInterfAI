@@ -1,6 +1,15 @@
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QTextCursor
-from PyQt6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSizePolicy, QVBoxLayout
+from PyQt6.QtWidgets import (
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+)
 
 
 class SearchHighlighter(QSyntaxHighlighter):
@@ -80,7 +89,8 @@ class SearchDialog(QDialog):
         self.setWindowTitle("Search in chat")
         self.setObjectName("searchDialog")
         # Tool -> au dessus de fenêtre parent, frameless -> sans bordures # (, ...stay on top)
-        self.setWindowFlag(Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint)  # Qt.WindowType.WindowStaysOnTopHint
+        # Qt.WindowType.WindowStaysOnTopHint
+        self.setWindowFlag(Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
         self.setAutoFillBackground(False)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)

@@ -13,15 +13,18 @@ class ThreadManager:
     - Provide convenience methods for starting and registering threads.
     Usage:
         manager = ThreadManager()
+
         # For QThread
         thread = QThread()
         worker = MyWorker()
         worker.moveToThread(thread)
         thread.started.connect(worker.run)
         manager.start_qthread(thread)
+
         # For threading.Thread
         t = threading.Thread(target=some_function)
         manager.start_thread(t)
+
         # On application exit (MainWindow):
         manager.shutdown()
     """

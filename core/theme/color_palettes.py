@@ -75,8 +75,18 @@ COLOR_PALETTES = {
         "Text2": "rgb(251, 203, 188)",
         "Accent": "rgba(210, 180, 163, 0.8)",
     },
-    # 4 THÈMES CLAIRS
+    # 5 THÈMES CLAIRS
     # ---------------
+    "Clear Theme": {
+        "Base": "rgba(226, 230, 243, 1)",
+        "Base1": "rgba(255, 255, 255, 1)",
+        "Danger": "rgba(39, 71, 170, 0.5)",
+        "Warning": "rgba(83, 60, 116, 0.5)",
+        "Text": "rgb(10, 10, 10)",
+        "Text1": "rgb(12, 24, 33)",
+        "Text2": "rgb(27, 52, 65)",
+        "Accent": "rgb(70, 31, 102)",
+    },
     "Grey Purple": {
         "Base": "rgb(192, 189, 194)",
         "Base1": "rgb(178, 179, 187)",

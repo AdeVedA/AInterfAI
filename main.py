@@ -129,7 +129,7 @@ def main():
     # Montrer la fenêtre immédiatement
     window.show()
 
-    # Différer le travail « lourd » (chargement des sessions, des prompt config...)
+    # Différer le travail « lourd » (chargement des sessions, des role config...)
     # pour qu'il démarre après que Qt ait affiché la fenêtre.
     QTimer.singleShot(0, lambda: (window.refresh_sessions(), window.on_load_role_llm_config()))
 

@@ -10,7 +10,7 @@ from langchain_core.runnables.base import Runnable
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from sqlalchemy.orm import Session
 
-from core.models import PromptConfig
+from core.models import RoleConfig
 from core.rag.config import RAGConfig
 
 
@@ -78,7 +78,7 @@ class PromptManager:
         LLM parameters (temperature, top_k, etc.).
 
         Args:
-            config_id: identifier of PromptConfig in database.
+            config_id: identifier of RoleConfig in database.
             model_name: model name (ex: 'mistral:latest').
             user_inputs: mapping placeholder->value (ex: {'{user_input}': 'Hello, ca va ?'}).
 
@@ -87,10 +87,10 @@ class PromptManager:
             llm_params (dict): Parameteers to go to LLM.
         """
         # 0) Charger la configuration depuis BDD pour fallback
-        cfg: PromptConfig = self.db.get(PromptConfig, config_id)
+        cfg: RoleConfig = self.db.get(RoleConfig, config_id)
         # llm_props = self.db.get(LLMProperties, model_name)
         if cfg is None:
-            raise ValueError(f"Aucune configuration PromptConfig trouvée pour config_id={config_id!r}")
+            raise ValueError(f"Aucune configuration RoleConfig trouvée pour config_id={config_id!r}")
 
         # 1) Préparer les messages de contexte initial (assembler la liste des messages)
         messages: list[dict] = []
@@ -117,27 +117,7 @@ class PromptManager:
         # 5) Construire le ChatPromptTemplate
         prompt = ChatPromptTemplate.from_messages(messages)
 
-        # 6) Préparer les paramètres LLM en partant de la config
-        # llm_params: Dict[str, Any] = {
-        #     "temperature": cfg.temperature,
-        #     "top_k": cfg.top_k,
-        #     "repeat_penalty": cfg.repeat_penalty,
-        #     "top_p": cfg.top_p,
-        #     "min_p": cfg.min_p,
-        #     "max_tokens": cfg.default_max_tokens,
-        #     "flash_attention": cfg.flash_attention,
-        #     "kv_cache_type": cfg.kv_cache_type,
-        # }
-        # if cfg.think is True:
-        #     llm_params["think"] = True
-        # 7) Appliquer les valeurs par défaut du modèle (LLMProperties)
-        #    uniquement si la config ne définit pas déjà ces clés
-        # for attr in ("temperature", "top_k", "repeat_penalty", "top_p", "min_p"):
-        #     val = getattr(llm_props, attr, None)
-        #     if val is not None and attr not in llm_params:
-        #         llm_params[attr] = val
-
-        return prompt  # , llm_params
+        return prompt
 
     def _get_history_fn(self) -> Callable[[int], SimpleChatHistory]:
 

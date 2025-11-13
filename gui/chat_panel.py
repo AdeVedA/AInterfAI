@@ -13,7 +13,14 @@ from PyQt6.QtCore import (
     pyqtSignal,
     pyqtSlot,
 )
-from PyQt6.QtGui import QClipboard, QFont, QKeySequence, QShortcut, QTextOption, QWheelEvent
+from PyQt6.QtGui import (
+    QClipboard,
+    QFont,
+    QKeySequence,
+    QShortcut,
+    QTextOption,
+    QWheelEvent,
+)
 from PyQt6.QtWidgets import (
     QApplication,
     QFrame,
@@ -52,8 +59,10 @@ class InputTextEdit(QTextEdit):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.setMinimumHeight(40)
         self.setPlaceholderText("Write your prompt here\nPress 'CTRL+Enter' to submit")
-        self.setObjectName("input_textedit")
+
         self.ctx_parser = ctx_parser
+        # self.setAcceptDrops(True)
+        self.chat_panel = parent
 
         self.input_token_count = QLabel("0\ntokens", self)
         self.input_token_count.setObjectName("chatinput_token_count")
@@ -68,22 +77,20 @@ class InputTextEdit(QTextEdit):
 
     def keyPressEvent(self, event):
         # Shift+Enter: insert newline
-        if (
-            event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)
-            and event.modifiers() == Qt.KeyboardModifier.ShiftModifier
-        ):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and event.modifiers() == Qt.KeyboardModifier.ShiftModifier:
             super().keyPressEvent(event)
+            return
+
         # Control+Enter: send
-        elif (
-            event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)
-            and event.modifiers() == Qt.KeyboardModifier.ControlModifier
-        ):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             text = self.toPlainText().strip()
             if text:
                 self.send.emit(text)
                 self.clear()
-        else:
-            super().keyPressEvent(event)
+            return
+
+        # toutes les autres touches sont laissées en gestion par le QTextEdit
+        super().keyPressEvent(event)
 
     def _on_text_changed(self):
         text = self.toPlainText() or ""
@@ -112,6 +119,63 @@ class InputTextEdit(QTextEdit):
 
         self.setMaximumHeight(max_h)
         self.updateGeometry()
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        # Sauvegarder l'état avant le drop
+        before_text = self.toPlainText()
+        before_cursor_pos = self.textCursor().position()
+
+        # Laisser Qt gérer le drop
+        super().dropEvent(event)
+
+        # Récupérer l'état après le drop
+        after_text = self.toPlainText()
+
+        # Identifier le texte exact inséré par Qt
+        if len(after_text) > len(before_text):
+            # Le texte a été inséré à la position du curseur original
+            inserted_text = after_text[
+                before_cursor_pos : before_cursor_pos + (len(after_text) - len(before_text))  # noqa: E203
+            ]
+
+            # Pour chaque URL, vérifier si elle correspond au texte inséré
+            for url in event.mimeData().urls():
+                path = url.toLocalFile()
+                if not path or not path.lower().endswith((".png", ".jpg", ".jpeg")):
+                    continue
+
+                self.chat_panel.pending_image_path = path
+
+                # Obtenir l'encodage correct pour l'URL
+                from urllib.parse import quote
+
+                encoded_path = quote(path, safe=":/\\")
+
+                # Vérifier si le texte inséré correspond au chemin (encodé ou non)
+                if inserted_text == path or inserted_text == encoded_path:
+                    # Remplacer exactement le texte inséré par le format markdown (pour affichage en user bubble)
+                    new_text = (
+                        before_text[:before_cursor_pos]
+                        + f"\n![image](file:///{encoded_path})\n"
+                        + after_text[before_cursor_pos + len(inserted_text) :]  # noqa: E203
+                    )
+                    self.setPlainText(new_text)
+                else:
+                    # Si la correspondance n'est pas exacte,
+                    # Remplacer simplement tout le texte après le drop par notre format
+                    placeholder = f"\n![image](file:///{encoded_path})\n"
+                    new_text = before_text + placeholder
+                    self.setPlainText(new_text)
+
+                break
+
+        # Focus final
+        self.setFocus(Qt.FocusReason.MouseFocusReason)
+        self.unsetCursor()
 
 
 class DualLogger:
@@ -276,6 +340,8 @@ class ChatPanel(QWidget):
         self.input = InputTextEdit(self, ctx_parser=self.ctx_parser)
         self.input.setObjectName("chat_input")
         self.input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        # enable drag‑and‑drop of image files
+        self.input.setAcceptDrops(True)
         # Police par défaut
         self._default_font_size = 16
         default_font = QFont(self.history_area.font().family(), self._default_font_size)
@@ -308,14 +374,12 @@ class ChatPanel(QWidget):
         self._last_bubble_width = None
         self.llm_streaming_started = False  # état du streaming
         self.auto_scroll_enabled = True  # auto-scroll vers le bas par defaut
-        self._block_wheel_scroll = (
-            False  # pour bloquer les scoll molettes dans ctrl+molette (zoom)
-        )
+        self._block_wheel_scroll = False  # pour bloquer les scoll molettes dans ctrl+molette (zoom)
         self._current_render_message_id = None
         self.llm_bubble_widget = None
         self.llm_waiting_widget = None
         self._stream_buffer = ""  # buffer used for throttled rendering
-
+        self.pending_image_path = None
         # Timer unique pour le batch de rendu
         self._batch_render_timer = QTimer(self)
         self._batch_render_timer.setInterval(650)  # 150 ms = 6-7 renders/s
@@ -361,16 +425,12 @@ class ChatPanel(QWidget):
         self.history_token_count_label = QLabel("History total tokens : ", self.console_overlay)
         self.history_token_count_label.setVisible(False)
         self.history_token_count_label.setObjectName("console_chathist_token_count")
-        self.history_token_count_label.setAlignment(
-            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop
-        )
+        self.history_token_count_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
         self.history_token_count = QLabel("0", self.console_overlay)
         self.history_token_count.setObjectName("console_chathist_token_count")
         self.history_token_count.setToolTip('Session\'s "Chat History" total Tokens count')
-        self.history_token_count.setAlignment(
-            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop
-        )
+        self.history_token_count.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
         layout.addWidget(self._btn_toggle_console)
         layout.addWidget(self.btn_clear)
@@ -505,10 +565,7 @@ class ChatPanel(QWidget):
         tb.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
         tb.setWordWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
         # interaction
-        flags = (
-            Qt.TextInteractionFlag.TextSelectableByMouse
-            | Qt.TextInteractionFlag.LinksAccessibleByMouse
-        )
+        flags = Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse
         tb.setTextInteractionFlags(flags)
         # size policy: expanding horizontal, fixed vertical => hauteur fixée plus tard
         tb.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -735,9 +792,7 @@ class ChatPanel(QWidget):
         doc.setTextWidth(tb.viewport().width())
         height = doc.size().height()
         tb.setFixedHeight(int(height) + 2)
-        bubble.setFixedHeight(
-            int(height + bubble.contentsMargins().top() + bubble.contentsMargins().bottom() + 2)
-        )
+        bubble.setFixedHeight(int(height + bubble.contentsMargins().top() + bubble.contentsMargins().bottom() + 2))
 
         # 5) Forcer le relayout de tout le chat
         if not self._bubble_update_timer.isActive():
@@ -834,9 +889,7 @@ class ChatPanel(QWidget):
         css = getattr(self, "_current_css", "")
         if css:
             # Envelopper le HTML (html ici est le fragment renvoyé par Renderer)
-            final_html = (
-                f"<html><head><meta charset='utf-8'>{css}</head><body>{html}</body></html>"
-            )
+            final_html = f"<html><head><meta charset='utf-8'>{css}</head><body>{html}</body></html>"
         else:
             final_html = html
 
@@ -927,10 +980,7 @@ class ChatPanel(QWidget):
             bubble.setMaximumWidth(avail)
             tb = bubble.findChild((QTextBrowser, QTextEdit))
             if tb:
-                inner = avail - (
-                    bubble.layout().contentsMargins().left()
-                    + bubble.layout().contentsMargins().right()
-                )
+                inner = avail - (bubble.layout().contentsMargins().left() + bubble.layout().contentsMargins().right())
                 tb.setMaximumWidth(inner)
 
     def _update_bubble_widths(self):
@@ -1121,12 +1171,8 @@ class ChatPanel(QWidget):
             return
 
         self._btn_copy.clicked.connect(lambda: self._copy_bubble(self._active_bubble, message_id))
-        self._btn_edit.clicked.connect(
-            lambda: self._start_edit(self._active_bubble, is_user, message_id)
-        )
-        self._btn_delete.clicked.connect(
-            lambda: self._delete_bubble(self._active_bubble, message_id)
-        )
+        self._btn_edit.clicked.connect(lambda: self._start_edit(self._active_bubble, is_user, message_id))
+        self._btn_delete.clicked.connect(lambda: self._delete_bubble(self._active_bubble, message_id))
 
         self._reposition_overlays()
         self._btn_copy.show()
@@ -1160,9 +1206,7 @@ class ChatPanel(QWidget):
             y = max(margin, min(y, vp.height() - self._btn_edit.height() - margin))
             self._btn_delete.move(int(x), int(y))
             self._btn_edit.move(int(x) - self._btn_edit.width() - margin, int(y))
-            self._btn_copy.move(
-                int(x) - self._btn_edit.width() - self._btn_copy.width() - margin - margin, int(y)
-            )
+            self._btn_copy.move(int(x) - self._btn_edit.width() - self._btn_copy.width() - margin - margin, int(y))
 
             # Afficher les boutons
             self._btn_copy.show()
@@ -1274,12 +1318,8 @@ class ChatPanel(QWidget):
         # Connexions
         btn_cancel.clicked.connect(lambda: self._cancel_edit(edit_frame, bubble))
         shortcut_cancel.activated.connect(lambda: self._cancel_edit(edit_frame, bubble))
-        btn_modify.clicked.connect(
-            lambda: self._confirm_edit(edit_frame, message_id, editor.toPlainText(), is_user)
-        )
-        shortcut_save.activated.connect(
-            lambda: self._confirm_edit(edit_frame, message_id, editor.toPlainText(), is_user)
-        )
+        btn_modify.clicked.connect(lambda: self._confirm_edit(edit_frame, message_id, editor.toPlainText(), is_user))
+        shortcut_save.activated.connect(lambda: self._confirm_edit(edit_frame, message_id, editor.toPlainText(), is_user))
 
         # Ajuster dynamiquement hauteur texte+boutons
         def resize_edit():
@@ -1373,9 +1413,7 @@ class ChatPanel(QWidget):
 
     def _delete_bubble(self, bubble: QFrame, message_id: int):
         """Removes the bubble and the line from the Database."""
-        reply = QMessageBox.question(
-            self, "Delete message", "Do you really want to delete this message?"
-        )
+        reply = QMessageBox.question(self, "Delete message", "Do you really want to delete this message?")
         if reply == QMessageBox.StandardButton.Yes:
             self.session_manager.delete_message(message_id)
             idx = self.history_layout.indexOf(bubble)
@@ -1506,9 +1544,7 @@ class ChatPanel(QWidget):
                 x = global_pos.x() - 200
 
                 if global_pos.y() > 0:
-                    y = max(
-                        0, global_pos.y() - self.search_dialog.sizeHint().height() - 5
-                    )  # juste au-dessus
+                    y = max(0, global_pos.y() - self.search_dialog.sizeHint().height() - 5)  # juste au-dessus
                 else:
                     y = min(0, global_pos.y() - self.search_dialog.sizeHint().height() - 5)
                 self.search_dialog.move(x, y)

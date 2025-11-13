@@ -29,17 +29,42 @@ class ConfigPanel(QWidget):
 
     def __init__(self, parent=None, session_manager=None):
         super().__init__(parent)
+        self.parent = parent
         self.session_manager = session_manager
 
-        layout = QVBoxLayout(self)
         self.setObjectName("config_panel")
         self.setMinimumWidth(180)
         self.setMaximumWidth(360)
         self.setContentsMargins(0, 0, 0, 0)
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(1)
+        layout.setContentsMargins(3, 8, 3, 8)
+
         # Titre
-        # title = QLabel("Config")
-        # title.setObjectName("titles")
-        # layout.addWidget(title)
+        title = QLabel("Config :")
+        title.setObjectName("config_title")
+        title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        title.setToolTip(
+            "Editable Config for this `Role` + `LLM` combination. Tweak before sending request. Save for Config to persist.\n"
+            "System Prompt, LLM Model and LLM server parameters used for your next LLM inference.\n"
+            "Default configs for the Role should be edited and adapted to the LLM you use and the chat interaction you want.\n"
+            "Some markers (with another color) can represents LLM `recommanded` parameters, if any are found for this model\n"
+            "you can also set them yourself clicking on 🛠️ icon next to the model.\n"
+            "Click on `Save Config` to save actual Config state for this `Role` + `LLM` combination.\n"
+            "Click Load to recall the previously saved (or default) Config for this `Role` + `LLM` combination."
+        )
+        layout.addWidget(title)
+
+        add_separator(name="line", layout=layout)
+
+        self.role_llm_combi_title = QLabel("Role <-> LLM")
+        self.role_llm_combi_title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        self.role_llm_combi_title.setObjectName("role_llm_combi_title")
+        layout.addWidget(self.role_llm_combi_title)
+
+        add_separator(name="line", layout=layout, thickness=5, top_space=5, bottom_space=5)
+
         self.sys_prmpt_label = QLabel("System Prompt :")
         sys_prmpt_tooltip = (
             "A system prompt sets the AI's behavior, rules, and context for a conversation.\n"
@@ -188,7 +213,7 @@ class ConfigPanel(QWidget):
             self.kv_cache.setItemData(i, Qt.AlignmentFlag.AlignRight, Qt.ItemDataRole.TextAlignmentRole)
         self.kv_cache.setToolTip(kv_tooltip)
         self.kv_cache.setProperty("qssClass", "slider-value")
-        self.kv_cache.setStyleSheet("QComboBox { text-align: right; padding-right: 2px; }")
+        # self.kv_cache.setStyleSheet("QComboBox#config_KV_Cache { text-align: right; padding-right: 2px; }")
         h_kv = QHBoxLayout()
         h_kv.addWidget(lbl_kv, alignment=Qt.AlignmentFlag.AlignLeft)
         h_kv.addWidget(self.kv_cache, alignment=Qt.AlignmentFlag.AlignRight)
@@ -196,19 +221,35 @@ class ConfigPanel(QWidget):
 
         # 3) Thinking toggle (caché par defaut)
         thinking_layout = QHBoxLayout()
+
         thinking_tooltip = "If the model supports 'thinking', toggles whether to use it."
         self.thinking_label = QLabel("Enable Thinking:")
         self.thinking_label.setToolTip(thinking_tooltip)
         self.thinking_label.setProperty("qssClass", "slider-title")
-        self.thinking = QCheckBox()
-        self.thinking.setObjectName("config_thinking")
-        self.thinking.setToolTip(thinking_tooltip)
+
+        self.thinking_checkbox = QCheckBox()
+        self.thinking_checkbox.setObjectName("config_thinking")
+        self.thinking_checkbox.setToolTip(thinking_tooltip)
+
+        # drop_down pour gpt-oss
+        self.thinking_combo = QComboBox(self)
+        self.thinking_combo.setObjectName("config_thinking_combo")
+        self.thinking_combo.addItems(["low", "medium", "high"])
+        for i in range(self.thinking_combo.count()):
+            self.thinking_combo.setItemData(i, Qt.AlignmentFlag.AlignRight, Qt.ItemDataRole.TextAlignmentRole)
+        self.thinking_combo.setToolTip(thinking_tooltip + "\nChoose thinking level for gpt-oss models :\nlow, medium or high")
+        # self.thinking_combo.setProperty("qssClass", "slider-value")
+
         thinking_layout.addWidget(self.thinking_label, alignment=Qt.AlignmentFlag.AlignLeft)
-        thinking_layout.addWidget(self.thinking, alignment=Qt.AlignmentFlag.AlignRight)
+        thinking_layout.addStretch()
+        thinking_layout.addWidget(self.thinking_checkbox, alignment=Qt.AlignmentFlag.AlignRight)
+        thinking_layout.addWidget(self.thinking_combo, alignment=Qt.AlignmentFlag.AlignRight)
+
         layout.addLayout(thinking_layout)
-        # hide until we know model supports it
+        # cacher jusqu'à choix du model
         self.thinking_label.hide()
-        self.thinking.hide()
+        self.thinking_checkbox.hide()
+        self.thinking_combo.hide()
 
         layout.addSpacing(8)
 
@@ -216,9 +257,7 @@ class ConfigPanel(QWidget):
 
         # 4) mmap
         mmap_layout = QHBoxLayout()
-        mmap_tooltip = (
-            "Model load time improved when ON, but disable it if the model is larger than your available RAM"
-        )
+        mmap_tooltip = "Model load time improved when ON, but disable it if the model is larger than your available RAM"
         mmap_title = QLabel("Use mmap : ")
         mmap_title.setToolTip(mmap_tooltip)
         mmap_title.setProperty("qssClass", "slider-title")
@@ -249,14 +288,16 @@ class ConfigPanel(QWidget):
         self.btn_load = QPushButton("Load Config", self)
         self.btn_load.setObjectName("config_btn_load")
         self.btn_load.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_load.setToolTip("loads the saved/default config for the duo 'Prompt Type/LLM'")
+        self.btn_load.setToolTip("loads the saved/default config for the combination 'Role/LLM'")
         self.btn_save = QPushButton("Save Config", self)
         self.btn_save.setObjectName("config_btn_save")
         self.btn_save.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_save.setToolTip("Saves the current config for the duo 'Prompt Type/LLM'")
+        self.btn_save.setToolTip("Saves the current config for the combination 'Role/LLM'")
         btn_layout.addWidget(self.btn_load)
         btn_layout.addWidget(self.btn_save)
         layout.addLayout(btn_layout)
+
+        add_separator(name="line", layout=layout)
 
         self.btn_load.clicked.connect(self.load_config)
         self.btn_save.clicked.connect(self.save_config)
@@ -264,7 +305,7 @@ class ConfigPanel(QWidget):
 
     def get_parameters(self) -> dict:
         """
-        Retrieve current PromptConfig fields:
+        Retrieve current RoleConfig fields:
         - description (system prompt)
         - LLM hyperparameters
         - max_tokens (context window)
@@ -284,9 +325,13 @@ class ConfigPanel(QWidget):
             "use_mmap": self.mmap.isChecked(),
             "num_thread": self.num_threads.value(),
         }
-        # ajoute le paramètre "thinking" s'il est visible (supporté par le modèle)
-        if self.thinking.isVisible():
-            params["think"] = self.thinking.isChecked()
+        # ajoute le paramètre "thinking" s'il existe/est visible (supporté par le modèle)
+        if self.thinking_checkbox.isVisible():
+            params["think"] = self.thinking_checkbox.isChecked()
+            print("params['think'] checkbox : ", params["think"])
+        elif self.thinking_combo.isVisible():
+            params["think"] = self.thinking_combo.currentText()
+            print("params['think'] combo : ", params["think"])
         return params
 
     def set_model_defaults(self, model_name: str):
@@ -317,18 +362,25 @@ class ConfigPanel(QWidget):
             self.max_tokens.setMaximum(props.context_length)
 
         # Affiche ou cache le paramètre booléen "Thinking" selon les capacités du modèle
-        supports_thinking = (
-            props and isinstance(props.capabilities, (list, tuple)) and "thinking" in props.capabilities
-        )
+        supports_thinking = props and isinstance(props.capabilities, (list, tuple)) and "thinking" in props.capabilities
         # print(f"Thinking : -- {supports_thinking} -- for {model_name}")
         if supports_thinking is not None:
-            self.thinking_label.setVisible(supports_thinking)
-            self.thinking.setVisible(supports_thinking)
+            if model_name.startswith("gpt-oss"):
+                self.thinking_label.setVisible(supports_thinking)
+                self.thinking_checkbox.hide()
+                self.thinking_combo.show()
+            else:
+                self.thinking_label.setVisible(supports_thinking)
+                self.thinking_checkbox.setVisible(supports_thinking)
+                self.thinking_combo.hide()
         else:
-            self.thinking.setChecked(False)
+            self.thinking_checkbox.setChecked(False)
 
         if not supports_thinking:
-            self.thinking.setChecked(False)
+            self.thinking_label.hide()
+            self.thinking_checkbox.hide()
+            self.thinking_combo.hide()
+            self.thinking_checkbox.setChecked(False)
 
 
 class DefaultMarkerSlider(QSlider):

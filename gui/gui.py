@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Module: gui.py --- Defines : MainWindow
-Description: PyQt6-based GUI for interacting with various LLM/prompt system locally.
+Description: PyQt6-based GUI for interacting with various LLM/Roles locally.
 It also handles loading/saving of GUI state, LLM parameters
 (window geometry, splitter sizes, theme) in 'gui_config.json'.
 """
@@ -18,13 +18,13 @@ from core.config_manager import ConfigManager
 from core.context_parser import ContextParser
 from core.llm_manager import LLMManager
 from core.message_manager.msg_proc import MissingConfigError, UserMessageProcessor
-from core.models import PromptConfig
-from core.prompt_config_manager import PromptConfigManager
+from core.models import RoleConfig
 from core.prompt_manager import PromptManager
+from core.role_config_manager import RoleConfigManager
 from core.session_manager import SessionManager
 from core.theme.theme_manager import GUI_CONFIG_PATH, ThemeManager, get_current_theme
-from gui.thread_manager import QThread, ThreadManager
 from gui.widgets.prompt_validation_dialog import show_prompt_validation_dialog
+from utils.thread_manager import QThread, ThreadManager
 
 from .chat_panel import ChatPanel
 from .config_panel import ConfigPanel
@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
         self.llm_manager = llm_manager
         self.thread_manager = ThreadManager()
         self.prompt_manager = PromptManager(self.session_manager.db, session_manager=self.session_manager)
-        self.prompt_config_manager = PromptConfigManager()
+        self.role_config_manager = RoleConfigManager()
         self.context_parser = ContextParser(config_path=Path("core/context_parser_config.json"))
         self.llm_worker = None
 
@@ -64,6 +64,8 @@ class MainWindow(QMainWindow):
         self.current_llm = None
         self.current_llm_name = None
         self.current_session_id = None
+        self.pending_image_path = None
+        self.pending_image_base64 = None
         self.generated_context: str = ""
         self.load_keep_alive_from_json()
 
@@ -72,7 +74,8 @@ class MainWindow(QMainWindow):
             self,
             theme_manager=self.theme_manager,
             llm_manager=self.llm_manager,
-            prompt_config_manager=self.prompt_config_manager,
+            role_config_manager=self.role_config_manager,
+            thread_manager=self.thread_manager,
         )
         self.addToolBar(self.toolbar)
 
@@ -137,8 +140,8 @@ class MainWindow(QMainWindow):
         # Toolbar
         self.toolbar.toggle_llm.connect(self.on_toggle_llm)  # charge ou décharge LLM
         self.toolbar.llm_changed.connect(self.on_load_role_llm_config)
-        self.toolbar.prompt_changed.connect(self.on_load_role_llm_config)
-        self.toolbar.new_prompt.connect(self.on_new_prompt)
+        self.toolbar.role_changed.connect(self.on_load_role_llm_config)
+        self.toolbar.new_role.connect(self.on_new_role)
         # hide/show panels
         self.toolbar.toggle_sessions.connect(lambda visible: self._toggle_panel(self.panel_sessions, visible))
         self.toolbar.toggle_chat_alone.connect(lambda visible: self._toggle_chat_panel(visible))
@@ -195,21 +198,21 @@ class MainWindow(QMainWindow):
         """Called when the user presses ENTER.
         Interface GUI -> core processing + orchestration of LLM streaming.
         """
-        # 00. print le message user dans la console
+        # 000. print le message user dans la console
         print("Your request :\n", user_text)
-        # 0. Vérif. config / LLM chargé (identique au code actuel)
+        # 00. Vérif. config / LLM chargé (identique au code actuel)
         if self.current_session_id is None:
             self.create_new_session()
         if self.current_config_id is None:
             cfg = self.apply_role_llm_config(
                 self.toolbar.llm_combo.currentText(),
-                self.toolbar.prompt_button.currentText(),
+                self.toolbar.role_button.currentText(),
             )
             if cfg is None:
                 QMessageBox.warning(
                     self,
                     "Missing configuration",
-                    "No prompt configuration is loaded. Choose an prompt before sending a message.",
+                    "No Role configuration is loaded. Choose an Role before sending a message.",
                 )
                 QTimer.singleShot(0, lambda: self.panel_chat.input.setText(user_text))
                 return
@@ -218,11 +221,11 @@ class MainWindow(QMainWindow):
         if not self.current_llm:
             resp = QMessageBox.question(
                 self,
-                "load 'currently displayed' Prompt & LLM ?",
+                "load 'currently displayed' Role & LLM ?",
                 "( To avoid this message in the future, before sending your request :\n"
-                "1. change your selected combo Prompt/LLM if needed\n--> 2. press 'Load LLM' )\n\n"
+                "1. change your selected combo Role/LLM if needed\n--> 2. press 'Load LLM' )\n\n"
                 f"Do you want to send your request to :\n\n    LLM         '{self.toolbar.llm_combo.currentText()}'\n"
-                f"\n    Prompt    '{self.toolbar.prompt_button.currentText()}'  ?",
+                f"\n    Role    '{self.toolbar.role_button.currentText()}'  ?",
             )
             if resp == QMessageBox.StandardButton.Yes:
                 self.on_load_llm_and_config()
@@ -231,8 +234,33 @@ class MainWindow(QMainWindow):
                 return
             # garde le message dans l'input et prévient l'utilisateur
             # QTimer.singleShot(0, lambda: self.panel_chat.input.setText(user_text))
-            # self.panel_chat.append_message("system", "No prompt/LLM loaded. Please select one.")
+            # self.panel_chat.append_message("system", "No Role/LLM loaded. Please select one.")
             # return
+
+        # 0. Si une image a été droppée, la lire et l'encoder pour les modèles avec vision
+        image_base64 = None
+        if self.panel_chat.pending_image_path:
+            print("Maindow.self_pending_image trouvée dasn handle_user_message")
+            try:
+                import base64
+                from io import BytesIO
+
+                from PIL import Image
+
+                pil_img = Image.open(self.panel_chat.pending_image_path).convert("RGB")
+                buf = BytesIO()
+                pil_img.save(buf, format="JPEG")
+                image_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+                self.panel_chat.pending_image_base64 = image_base64
+            except Exception as e:
+                print("[IMG] failed to load/convert ->", e)
+                QMessageBox.warning(
+                    self,
+                    "Image error",
+                    f"Could not read the dropped image:\n{e}",
+                )
+            finally:
+                self.panel_chat.pending_image_path = None
 
         # 1. Récupération des infos UI (mode, prompts, fichiers, ...)
         mode_id = self.panel_context.mode_group.checkedId()  # 0=OFF, 1=FULL, 2=RAG
@@ -240,7 +268,7 @@ class MainWindow(QMainWindow):
         selected_files = self.panel_context.selected_files()
         session_id = self.current_session_id
         llm_name = self.toolbar.llm_combo.currentText()
-        role_name = self.toolbar.prompt_button.currentText()
+        role_name = self.toolbar.role_button.currentText()
         config_id = self.current_config_id
         # print(
         #     "mode_id : ",
@@ -300,7 +328,7 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(0, lambda: self.panel_chat.input.setText(user_text))
             return
 
-        # 3. Affichage du prompt pour validation si option checkée
+        # 3. Affichage du prompt final pour validation si option checkée
         final_prompt = proc_result.formatted_prompt
         if self.toolbar.action_show_query.isChecked():
             final_prompt = self._show_prompt_validation_dialog(final_prompt)
@@ -318,7 +346,7 @@ class MainWindow(QMainWindow):
             "llm",
             "",
             llm_name=llm_name,
-            prompt_type=role_name,
+            role_type=role_name,
             config_id=config_id,
         )
         llm_message_id = int(llm_msg.id)
@@ -329,9 +357,10 @@ class MainWindow(QMainWindow):
             llm=self.current_llm,
             session_id=session_id,
             message_id=llm_message_id,
+            image_base64=image_base64,
         )
 
-    def _launch_llm_worker(self, prompt: str, llm, session_id: int, message_id: int):
+    def _launch_llm_worker(self, prompt: str, llm, session_id: int, message_id: int, image_base64: str = None):
         """Helper who creates the Qthread + the Worker, connects the signals"""
         # 1. créer le thread Qt
         worker_thread = QThread()
@@ -344,6 +373,7 @@ class MainWindow(QMainWindow):
             session_manager=self.session_manager,  # for read-only
             message_id=message_id,
             generate_title=self.toolbar.generate_title,
+            image_base64=image_base64,
         )
         worker.moveToThread(worker_thread)
 
@@ -449,7 +479,7 @@ class MainWindow(QMainWindow):
         self.llm_loaded = False
 
     def on_load_llm_and_config(self):
-        """Loads the selected prompt and its settings (in a thread so as not to block)."""
+        """Loads the selected Role and its settings (in a thread so as not to block)."""
         if self.current_session_id is None:
             self.create_new_session()
 
@@ -490,11 +520,11 @@ class MainWindow(QMainWindow):
         # 4) Curseur normal
         QApplication.restoreOverrideCursor()
 
-    def on_new_prompt(self, role_name: str, role_system_prompt: str):
+    def on_new_role(self, role_name: str, role_system_prompt: str):
         """
         Slot called when choosing '+ New Role' in the combo.
-        1) Asks the user a name and a default system prompt for the Prompt type
-        2) Creates a new prompt_Config entry in prompt_config_defaults.json and in DB
+        1) Asks the user a name and a default system prompt for the Role type
+        2) Creates a new role_config entry in role_config_defaults.json and in DB
         3) Reinjects this name in the combo just before '+ New Role'
         4) Automatically selects this new prompt and reloads the config panel
         """
@@ -502,7 +532,7 @@ class MainWindow(QMainWindow):
         # 1) Créer en base via ConfigManager
         #    On reprend les defaults s'il y en a, sinon on part d'un dict vide.
 
-        if role_name not in self.prompt_config_manager.get_types():
+        if role_name not in self.role_config_manager.get_types():
             prompt_dict = {
                 "description": role_system_prompt,
                 "temperature": 0.7,
@@ -512,21 +542,21 @@ class MainWindow(QMainWindow):
                 "min_p": 0.05,
                 "default_max_tokens": 8192,
             }
-            self.prompt_config_manager.add_new_prompt(role_name, prompt_dict)
-        defaults = self.prompt_config_manager.get_config(role_name)
+            self.role_config_manager.add_new_role(role_name, prompt_dict)
+        defaults = self.role_config_manager.get_config(role_name)
         try:
             self.config_manager.save_role_config(llm_name, role_name, defaults)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Impossible to create the prompt : {e}")
             return
 
-        # 2) Mettre à jour le menu prompt_button
-        self.toolbar._build_prompt_menu()
+        # 2) Mettre à jour le menu role_button
+        self.toolbar._build_role_menu()
 
-        # 3) Sélectionner le nouvel prompt
-        self.toolbar._prompt_action_triggered(role_name)
+        # 3) Sélectionner le nouveau Role
+        self.toolbar._role_action_triggered(role_name)
 
-        # 4) recharger la config de cet prompt dans le panneau ConfigPanel
+        # 4) recharger la config de ce Role dans le panneau ConfigPanel
         self.on_load_role_llm_config()
 
     def refresh_sessions(self):
@@ -743,41 +773,40 @@ class MainWindow(QMainWindow):
             return
         html_export = self._session_to_html(session)
         with open(path, "w", encoding="utf-8") as f:
-            # ici tu construis ton contenu HTML
+            # on construit le contenu HTML
             f.write(html_export)
 
     def _session_to_html(self, session):
         return self.panel_chat._renderer_worker._renderer.session_to_html(session)
 
     def on_save_role_llm_config(self):
-        """Back up the prompt's current configuration in DB."""
+        """Back up the Role's current configuration in DB."""
         llm_name = self.toolbar.llm_combo.currentText()
-        prompt = self.toolbar.prompt_button.currentText()
+        role_name = self.toolbar.role_button.currentText()
         params = self.panel_config.get_parameters()
-        self.config_manager.save_role_config(llm_name, prompt, params)
+        self.config_manager.save_role_config(llm_name, role_name, params)
 
     def on_load_role_llm_config(self):
         """get Load from the DB the prompt's config and updates the panel."""
         llm = self.toolbar.llm_combo.currentText()
-        prompt = self.toolbar.prompt_button.currentText()
-        if not prompt or not llm:
+        role_name = self.toolbar.role_button.currentText()
+        if not role_name or not llm:
             return
-        self.apply_role_llm_config(llm, prompt)
+        self.apply_role_llm_config(llm, role_name)
 
-    def apply_role_llm_config(self, llm_name: str, role_name: str) -> Optional[PromptConfig]:
+    def apply_role_llm_config(self, llm_name: str, role_name: str) -> Optional[RoleConfig]:
         """
-        Loads or creates the config PromptConfig for (llm_name, role_name),
+        Loads or creates the config RoleConfig for (llm_name, role_name),
         updates the widgets of panel_config and returns the cfg object.
         """
-        # 0)
         # 1) Charger ou créer la config
         cfg = self.config_manager.load_role_config(llm_name, role_name)
 
         if cfg is None:
             # Defaults depuis JSON
-            prompt_defaults = self.prompt_config_manager.get_config(role_name)
+            role_defaults = self.role_config_manager.get_config(role_name)
             # Fusion avec les valeurs DB LLMProperties
-            merged_defaults = self.llm_manager.props_mgr.merge_with_defaults(prompt_defaults, llm_name)
+            merged_defaults = self.llm_manager.props_mgr.merge_with_defaults(role_defaults, llm_name)
 
             cfg = self.config_manager.save_role_config(
                 llm_name,
@@ -789,11 +818,11 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(
                 self,
                 "Error",
-                f'Impossible to load/create the config for the prompt "{role_name}" and the LLM "{llm_name}".',
+                f'Impossible to load/create the config for the Role "{role_name}" and the LLM "{llm_name}".',
             )
             return None
 
-        # 2) Mémoriser l'ID pour build_prompt
+        # 2) Mémoriser l'ID de la config du Role
         self.current_config_id = cfg.id
 
         # 3) Mettre à jour tous les widgets de panel_config
@@ -806,11 +835,19 @@ class MainWindow(QMainWindow):
         self.panel_config.max_tokens.setValue(cfg.default_max_tokens)
         self.panel_config.flash_attention.setChecked(cfg.flash_attention)
         self.panel_config.kv_cache.setCurrentText(cfg.kv_cache_type)
-        self.panel_config.thinking.setChecked(bool(cfg.think))
+        # gérer la nature différente des paramètres thinking (booléen ou string low/medium/high pr gpt-oss)
+        if llm_name.startswith("gpt-oss"):
+            txt = cfg.think if isinstance(cfg.think, str) else ""
+            idx = self.panel_config.thinking_combo.findText(txt)
+            self.panel_config.thinking_combo.setCurrentIndex(idx if idx != -1 else 0)
+        else:
+            self.panel_config.thinking_checkbox.setChecked(bool(cfg.think))
 
         # 4) Remettre les defaults LLMProperties si besoin
         self.panel_config.set_model_defaults(llm_name)
 
+        # 5) mettre à jour le titre du config panel
+        self.panel_config.role_llm_combi_title.setText(f"{role_name}\n{llm_name}")
         return cfg
 
     def load_keep_alive_from_json(self):
@@ -844,9 +881,9 @@ class MainWindow(QMainWindow):
             if font_size:
                 self.panel_chat.set_default_font_size(font_size)
 
-            prompts_language = data.get("prompts_language", "en")
-            if prompts_language is not None:
-                self.toolbar.set_language(prompts_language)
+            role_language = data.get("role_language", "en")
+            if role_language is not None:
+                self.toolbar.set_language(role_language)
 
             last_llm = data.get("last_llm")
             if last_llm:
@@ -854,15 +891,15 @@ class MainWindow(QMainWindow):
                 if idx != -1:
                     self.toolbar.llm_combo.setCurrentIndex(idx)
 
-            last_prompt = data.get("last_prompt")
-            if not last_prompt:
-                self.toolbar.prompt_button.setCurrentIndex(0)
-            if last_prompt:
-                idx = self.toolbar.prompt_button.findText(last_prompt)
+            last_role = data.get("last_role")
+            if not last_role:
+                self.toolbar.role_button.setCurrentIndex(0)
+            if last_role:
+                idx = self.toolbar.role_button.findText(last_role)
                 if idx != -1:
-                    self.toolbar.prompt_button.setCurrentIndex(idx)
+                    self.toolbar.role_button.setCurrentIndex(idx)
                 else:  # fallback si changement de langue et prompt de l'ancienne
-                    self.toolbar.prompt_button.setCurrentIndex(0)
+                    self.toolbar.role_button.setCurrentIndex(0)
 
             last_context_cfg = data.get("last_context_cfg", "default")
             if last_context_cfg:
@@ -898,26 +935,26 @@ class MainWindow(QMainWindow):
         sizes = [max(size, self.MIN_SPLITTER_SIZES[i]) for i, size in enumerate(sizes)]
         theme_name = self.theme_manager.current_theme
         last_llm = self.toolbar.llm_combo.currentText()
-        last_prompt = (
-            self.toolbar.prompt_button.currentText()
-            if self.toolbar.prompt_button.currentText() != self.toolbar.new_prompt_in_combo
+        last_role = (
+            self.toolbar.role_button.currentText()
+            if self.toolbar.role_button.currentText() != self.toolbar.new_role_in_combo
             else "chat"
         )
-        prompts_language = str(self.prompt_config_manager.get_current_language())
+        role_language = str(self.role_config_manager.get_current_language())
 
         data = {
             "geometry": geom,
             "splitter_sizes": sizes,
             "theme": theme_name,
             "last_llm": last_llm,
-            "last_prompt": last_prompt,
+            "last_role": last_role,
             "font_size": self.panel_chat._default_font_size,
             "last_context_cfg": self.panel_context.parser.config_name,
             "show_query_dialog": self.toolbar.show_query_dialog,
             "generate_title": self.toolbar.generate_title,
             "keep_alive": self.llm_manager.keep_alive,
             "llm_status_timer": self.toolbar.llm_status_timer,
-            "prompts_language": prompts_language,
+            "role_language": role_language,
         }
         GUI_CONFIG_PATH.write_text(json.dumps(data, indent=2))
 

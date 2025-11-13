@@ -135,6 +135,7 @@ class MarkdownRenderer:
       h5 { color: /*Text*/ ; font-size: 130% ; font-weight: bolder ; margin-left : 60px;}
       table { border: 2px solid /*Warning*/; border-collapse: collapse; width: auto;}
       table, th, td { border: 2px solid /*Warning*/; padding: 4px;}
+      img { max-width: 1024px; max-height: 1024px; width: auto; height: auto; display: block; margin: 8px auto;}
     </style>
     """
 
@@ -284,9 +285,7 @@ class MarkdownRenderer:
         )
 
         # post-process: pygments highlight + couleurs
-        html_body = (
-            self._highlight_code_html(html_body) if md_rend else self._highlight_code_html(html_body, md_rend=False)
-        )
+        html_body = self._highlight_code_html(html_body) if md_rend else self._highlight_code_html(html_body, md_rend=False)
 
         return html_body
 
@@ -347,25 +346,25 @@ class MarkdownRenderer:
         """proccess the session messages to render them in an app-current-theme stylized markdown doc"""
         lines = [
             f"{self.theme_manager.apply_theme_to_stylesheet(CSS_MD_TEMPLATE)}\n"
-            f"# AInter-Session :<br>****{session.session_name}****"
+            f"# AInter-Session :<br><font size='6'>**{session.session_name}**</font>"
         ]
         for m in session.messages:
             if m.sender == "user":
                 meta = (
-                    f"<br><br>******📜******<llm>🧙‍♂️{m.sender.capitalize()}"
+                    f"<br><br><font size='5'>**📜**</font><llm>🧙‍♂️{m.sender.capitalize()}"
                     f"<font size='3'><date> - {m.timestamp.strftime("%Y/%m/%d %H:%M")}"
                     "</date></font>"
                     "</llm><br><br>"
                 )
             if m.sender == "llm":
                 meta = (
-                    f"<br><br>******📜******<llm>🤖"
+                    f"<br><br><font size='5'>**📜**</font><llm>🤖"
                     f"<font size='6'>{m.llm_name} </font><font size='5'> *as* "
-                    f"<role>{m.prompt_type} </role></span></font>"
+                    f"<role>{m.role_type} </role></span></font>"
                     f"<font size='3'><date> - {m.timestamp.strftime("%Y/%m/%d %H:%M")}"
                     "</date></font></llm><br><br>"
                 )
-            lines.append(f"{meta}\n{m.content.replace("\n", " \n")}\n")  #
+            lines.append(f"{meta}\n{m.content.replace("\n", " \n").replace("file:///", "")}\n")  #
         return "\n\n".join(lines)
 
     def session_to_html(self, session):
@@ -387,7 +386,7 @@ class MarkdownRenderer:
                 meta = (
                     f"<br><br><llm>🤖"
                     f"<font size='6'>{m.llm_name} </font><font size='5'> <i>as</i> "
-                    f"<role>{m.prompt_type} </role></span></font>"
+                    f"<role>{m.role_type} </role></span></font>"
                     f"<font size='3'><date> - {m.timestamp.strftime("%Y/%m/%d %H:%M")}"
                     "</date></font></llm><br>"
                 )

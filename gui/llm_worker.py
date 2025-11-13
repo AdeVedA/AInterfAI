@@ -20,13 +20,22 @@ class LLMWorker(QObject):
     message_update_requested = pyqtSignal(int, str)  # (message_id, new_content)
     title_update_requested = pyqtSignal(int, str)  # (session_id, new_title)
 
-    def __init__(self, llm, session_id: int, session_manager, message_id: int, generate_title: bool = True):
+    def __init__(
+        self,
+        llm,
+        session_id: int,
+        session_manager,
+        message_id: int,
+        generate_title: bool = True,
+        image_base64: str = None,
+    ):
         super().__init__()
         self.llm = llm
         self.session_id = session_id
         self.session_manager = session_manager
         self.message_id = message_id
 
+        self._image_base64 = image_base64
         self._prompt = ""  # Stocke le message utilisateur
         self._stream_buffer = ""  # Contenu complet reçu du LLM
         self._stop_flag = False
@@ -68,11 +77,16 @@ class LLMWorker(QObject):
         # print("LLMWorker: start")
         if self.message_id is not None:
             self.start_streaming.emit(self.message_id)
-
+        # Lier l'image si nécessaire – this returns a *new* OllamaLLM
+        #    that carries the images in its internal request payload.
+        llm_to_use = self.llm
+        if self._image_base64:
+            # bind pour associer une copie de l'image à l'instance llm
+            llm_to_use = self.llm.bind(images=[self._image_base64])
         try:
             # Streaming : récupération des chunks de texte un par un
             self._stream_buffer = ""
-            async for chunk in self.llm.astream(self._prompt):
+            async for chunk in llm_to_use.astream(self._prompt):
                 if self._stop_flag:
                     print("⛔ Streaming interrupted by the user")
                     break
