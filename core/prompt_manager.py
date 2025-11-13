@@ -74,7 +74,7 @@ class PromptManager:
         user_inputs: Dict[str, str],
     ) -> Tuple[ChatPromptTemplate, Dict[str, Any]]:
         """
-        Build a Langchain catmompllette and also returns
+        Build a Langchain ChatPrompt and also returns
         LLM parameters (temperature, top_k, etc.).
 
         Args:
